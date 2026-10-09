@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Espresso">
+<meta name="theme-color" content="#8a4b22">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<title>Siebträger-Logbuch</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Familjen+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one phone column, fixed tab bar at the bottom; manometer gauge is the signature element */
+:root{
+  --bg:#f3f2ef; --surface:#ffffff; --ink:#2a1d17; --muted:#6f645d; --line:#e2ddd8;
+  --accent:#8a4b22; --accent-ink:#ffffff; --accent-soft:#f1e4d9; --zone:#2f7d4f; --zone-soft:#dcefe3;
+  --slow:#b5452f; --slow-soft:#f6e1db; --fast:#2f6aa8; --fast-soft:#dfe9f5;
+  --font-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --font-body:"Familjen Grotesk",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --font-num:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#17120f; --surface:#221b17; --ink:#f1e9e3; --muted:#a8998f; --line:#3a2f29;
+  --accent:#d9925a; --accent-ink:#1b120c; --accent-soft:#3a2a1f; --zone:#5fc08a; --zone-soft:#1e3527;
+  --slow:#ec8670; --slow-soft:#3e231d; --fast:#7fb0e6; --fast-soft:#1d2b3b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#17120f; --surface:#221b17; --ink:#f1e9e3; --muted:#a8998f; --line:#3a2f29;
+  --accent:#d9925a; --accent-ink:#1b120c; --accent-soft:#3a2a1f; --zone:#5fc08a; --zone-soft:#1e3527;
+  --slow:#ec8670; --slow-soft:#3e231d; --fast:#7fb0e6; --fast-soft:#1d2b3b; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:520px;margin:0 auto;padding-inline:16px;padding-block:20px 110px}
+h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+h1{font-size:1.7rem;font-weight:700}
+h2{font-size:1.25rem;font-weight:700}
+h3{font-size:1.05rem;font-weight:500}
+.eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
+.num{font-family:var(--font-num);font-variant-numeric:tabular-nums}
+.stack{display:flex;flex-direction:column;gap:14px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
+.muted{color:var(--muted)}
+.small{font-size:.86rem}
+header.top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:4px}
+.banner{background:var(--zone-soft);color:var(--ink);border-radius:12px;padding:12px 14px;font-size:.9rem;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+label{display:flex;flex-direction:column;gap:5px;font-size:.84rem;font-weight:600;color:var(--muted);min-width:0}
+label.check{flex-direction:row;align-items:center;gap:10px;color:var(--ink);font-size:.95rem;font-weight:500}
+label.check input{width:22px;height:22px;accent-color:var(--accent)}
+input,select,textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 12px;width:100%;min-width:0}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:10px 14px;font-weight:600}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);padding:14px;font-size:1.05rem}
+button.link{background:none;border:none;padding:4px 0;color:var(--accent);font-weight:600}
+button.danger{color:var(--slow)}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
+.seg button{border:none;background:none;padding:10px;border-radius:9px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.seg.three{grid-template-columns:repeat(3,1fr)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.chips button{flex:none;border-radius:999px;padding:9px 15px;font-weight:600;color:var(--muted)}
+.chips button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.timer{display:flex;gap:10px;align-items:stretch}
+.timer input{flex:1;font-family:var(--font-num);font-size:1.3rem}
+.timer button{min-width:112px}
+.timer button.running{background:var(--slow);border-color:var(--slow);color:#fff}
+.pill{display:inline-block;font-size:.75rem;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.pill.ok{background:var(--zone-soft);color:var(--zone)}
+.pill.slow{background:var(--slow-soft);color:var(--slow)}
+.pill.fast{background:var(--fast-soft);color:var(--fast)}
+.pill.type,.pill.none{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.pill.home{background:var(--accent-soft);color:var(--accent)}
+.result{border-width:2px}
+.result.ok{border-color:var(--zone)} .result.slow{border-color:var(--slow)} .result.fast{border-color:var(--fast)} .result.none{border-color:var(--line)}
+.next{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.next .big{font-family:var(--font-num);font-size:2.4rem;font-weight:600;line-height:1}
+.gauge{width:100%;max-width:260px;display:block;margin:0 auto}
+.gauge text{font-family:var(--font-num);font-size:10px;fill:var(--muted)}
+.why{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:.93rem}
+.bean{display:flex;flex-direction:column;gap:10px;text-align:left;width:100%;font-weight:400}
+.bean .head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat b{font-family:var(--font-num);font-size:1.15rem;font-weight:600}
+.stat span{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.spark{width:100%;height:46px;display:block}
+.shots{display:flex;flex-direction:column}
+.shot{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.shot:last-child{border-bottom:none}
+.shot .vals{font-family:var(--font-num);font-variant-numeric:tabular-nums;font-size:.92rem}
+/* Start */
+.hero{background:var(--ink);color:var(--bg);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:6px}
+.hero .eyebrow{color:inherit;opacity:.7}
+.hero .since{font-family:var(--font-display);font-size:2.1rem;font-weight:700;line-height:1.05;text-wrap:balance}
+.hero .quip{opacity:.8;font-size:.95rem}
+.hero button{align-self:flex-start;margin-top:8px;background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:4px}
+.tile b{font-family:var(--font-num);font-size:1.9rem;font-weight:600;line-height:1}
+.tile span{font-size:.82rem;color:var(--muted)}
+.namechips{display:flex;flex-wrap:wrap;gap:6px}
+.bars{width:100%;display:block}
+.bars text{font-family:var(--font-num);font-size:10px;fill:var(--muted)}
+.bars text.v{fill:var(--ink);font-weight:600}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));z-index:5}
+nav.tabs button{border:none;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.76rem;color:var(--muted);padding:6px 2px}
+nav.tabs button[aria-current="page"]{color:var(--accent)}
+nav.tabs svg{width:24px;height:24px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(80px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:.9rem;z-index:10;max-width:calc(100% - 32px)}
+textarea{min-height:110px;font-family:var(--font-num);font-size:12px}
+.confirm{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+details.method{background:var(--surface);border:1px solid var(--line);border-radius:14px}
+details.method summary{padding:14px 16px;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center;list-style:none}
+details.method summary::-webkit-details-marker{display:none}
+details.method summary::after{content:"›";color:var(--muted);font-size:1.3rem;transition:transform .2s}
+details.method[open] summary::after{transform:rotate(90deg)}
+details.method form{padding:0 16px 16px}
+.hint{font-size:.8rem;color:var(--muted);font-weight:400}
+@media (prefers-reduced-motion:no-preference){.needle{transition:transform .6s cubic-bezier(.3,1.4,.5,1)}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <!-- START -->
+  <section id="v-home" class="stack"></section>
+
+  <!-- BEZUG -->
+  <section id="v-log" class="stack" hidden>
+    <header class="top"><div><div class="eyebrow">Neuer Bezug</div><h1>Kaffee eintragen</h1></div></header>
+    <form id="shot-form" class="card stack" novalidate>
+      <div><div class="eyebrow" style="margin-bottom:6px">Zubereitung</div><div class="chips" id="f-method"></div></div>
+      <label for="f-bean">Kaffeesorte<select id="f-bean"></select></label>
+      <div id="f-type-wrap"><div class="eyebrow" style="margin-bottom:6px">Bezug</div>
+        <div class="seg" id="f-type"><button type="button" data-v="single">Single Shot</button><button type="button" data-v="double">Double Shot</button></div>
+      </div>
+      <div class="grid2">
+        <label for="f-grind">Mahlgrad<input id="f-grind" type="number" inputmode="decimal" step="any" placeholder="z. B. 18"></label>
+        <label for="f-yield"><span id="f-yield-label">Menge in der Tasse (g)</span><input id="f-yield" type="number" inputmode="decimal" step="any" placeholder="50"></label>
+      </div>
+      <label for="f-time">Durchlaufzeit in Sekunden <span id="f-time-hint" class="hint"></span>
+        <div class="timer"><input id="f-time" type="number" inputmode="decimal" step="any" placeholder="28"><button type="button" id="timer-btn">Stoppuhr</button></div>
+      </label>
+      <div><div class="eyebrow" style="margin-bottom:6px">Geschmack <span id="taste-opt">(optional)</span></div>
+        <div class="seg three" id="f-taste"><button type="button" data-v="sauer">Sauer</button><button type="button" data-v="gut">Lecker</button><button type="button" data-v="bitter">Bitter</button></div>
+      </div>
+      <label for="f-note">Notiz (optional)<input id="f-note" type="text" placeholder="z. B. neue Packung, 17 g Pulver"></label>
+      <p id="form-error" class="small" style="color:var(--slow);margin:0" hidden></p>
+      <button type="submit" class="primary">Bezug speichern</button>
+    </form>
+    <div id="result"></div>
+  </section>
+
+  <!-- SORTEN -->
+  <section id="v-beans" class="stack" hidden>
+    <header class="top"><div><div class="eyebrow">Überblick</div><h1>Kaffeesorten</h1></div><button id="bean-add-btn">+ Sorte</button></header>
+    <form id="bean-form" class="card stack" hidden novalidate>
+      <h2 id="bean-form-title">Neue Sorte</h2>
+      <label for="b-name">Name<input id="b-name" type="text" placeholder="z. B. Brasil Santos"></label>
+      <div class="grid2">
+        <label for="b-roaster">Rösterei<input id="b-roaster" type="text" placeholder="optional"></label>
+        <label for="b-date">Röstdatum<input id="b-date" type="date"></label>
+      </div>
+      <label for="b-start">Start-Mahlgrad<input id="b-start" type="number" inputmode="decimal" step="any" placeholder="optional, z. B. 18"></label>
+      <label class="check" for="b-active"><input id="b-active" type="checkbox" checked>Gerade zu Hause</label>
+      <div class="row"><button type="submit" class="primary" style="flex:1">Speichern</button><button type="button" id="bean-cancel">Abbrechen</button></div>
+    </form>
+    <div id="bean-list" class="stack"></div>
+  </section>
+
+  <!-- SORTE DETAIL -->
+  <section id="v-bean" class="stack" hidden></section>
+
+  <!-- EINSTELLUNGEN -->
+  <section id="v-settings" class="stack" hidden>
+    <header class="top"><div><div class="eyebrow">Einmal festlegen</div><h1>Einstellungen</h1></div></header>
+    <div class="stack">
+      <div class="row between"><h2>Zubereitungen</h2><button id="m-add">+ Zubereitung</button></div>
+      <p class="small muted" style="margin:0">Tippe eine Zubereitung an, um Zielmenge, Zielzeit und Mühle anzupassen.</p>
+      <div id="method-list" class="stack"></div>
+    </div>
+    <div class="card stack">
+      <h2>Datensicherung</h2>
+      <p class="small muted" style="margin:0">Alle Daten liegen nur auf diesem Gerät. Ab und zu eine Sicherung kopieren und z. B. in Notizen ablegen.</p>
+      <div class="row"><button id="exp-btn">Sicherung kopieren</button><button id="dl-btn">Als Datei speichern</button></div>
+      <label for="io-text">Sicherung (zum Wiederherstellen hier einfügen)<textarea id="io-text" spellcheck="false"></textarea></label>
+      <div class="row"><button id="imp-btn">Wiederherstellen</button><label for="imp-file" class="small" style="flex-direction:row;align-items:center;gap:8px">oder Datei:<input id="imp-file" type="file" accept="application/json,.json" style="padding:6px;width:auto"></label></div>
+      <div id="imp-confirm" class="confirm" hidden><span class="small">Alle aktuellen Daten ersetzen?</span><button id="imp-yes" class="danger">Ja, ersetzen</button><button id="imp-no">Abbrechen</button></div>
+    </div>
+  </section>
+</div>
+
+<nav class="tabs" aria-label="Bereiche">
+  <button data-tab="home" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 17a8 8 0 1 1 16 0"/><path d="M12 17l3.5-5"/><path d="M4 20h16"/></svg>Start</button>
+  <button data-tab="log"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 9h13v4a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6z"/><path d="M17 10h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M8 3c0 1.5 1 1.5 1 3M12 3c0 1.5 1 1.5 1 3"/></svg>Bezug</button>
+  <button data-tab="beans"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><ellipse cx="12" cy="12" rx="6.5" ry="9" transform="rotate(35 12 12)"/><path d="M8.5 6.5c3 2 4 7 7 11"/></svg>Sorten</button>
+  <button data-tab="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Einstellungen</button>
+</nav>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+(function(){
+const KEY='siebtraeger-logbuch-v2',OLDKEY='siebtraeger-logbuch-v1';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,10);
+const fmt=n=>{if(n==null||n===''||isNaN(n))return '–';const r=Math.round(n*10)/10;return String(r).replace('.',',')};
+const fmtT=s=>{if(s==null||isNaN(s))return '–';if(s<90)return fmt(s)+' s';const m=Math.floor(s/60),r=Math.round(s%60);return m+':'+String(r).padStart(2,'0')+' min'};
+const typeLabel=t=>t==='single'?'Single':t==='double'?'Double':'';
+const DAY=864e5;
+
+/* ---------- Zubereitungen: Voreinstellungen ---------- */
+const PRESETS=[
+  {id:'espresso',name:'Siebträger',hasTypes:true,single:25,double:50,yield:50,min:25,max:30,secPerStep:4,step:1,dir:'coarse',mode:'time',dose:18,temp:93},
+  {id:'v60',name:'V60 Filter',hasTypes:false,yield:250,min:150,max:210,secPerStep:15,step:1,dir:'coarse',mode:'time',dose:15,temp:94},
+  {id:'aeropress',name:'AeroPress',hasTypes:false,yield:220,min:90,max:150,secPerStep:20,step:1,dir:'coarse',mode:'taste',dose:15,temp:85},
+  {id:'moka',name:'Bialetti',hasTypes:false,yield:120,min:180,max:300,secPerStep:30,step:1,dir:'coarse',mode:'taste',dose:16,temp:70}];
+const methodOf=id=>db.methods.find(m=>m.id===id);
+const targetOf=(m,type)=>m.hasTypes?+m[type||'double']:+m.yield;
+
+/* ---------- Beispieldaten (simuliert, damit die Vorschläge zusammenpassen) ---------- */
+function demoData(){
+  let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  const now=Date.now(),today=new Date();today.setHours(0,0,0,0);
+  const d={v:2,methods:PRESETS.map(p=>({...p})),demo:true,last:{},
+    beans:[{id:'b1',name:'Brasil Santos',roaster:'Rösterei am Markt',roastDate:'',start:18,active:true},
+      {id:'b2',name:'Äthiopien Yirgacheffe',roaster:'',roastDate:'',start:16,active:true},
+      {id:'b3',name:'Hausmischung Crema',roaster:'',roastDate:'',start:20,active:true},
+      {id:'b4',name:'Kolumbien Huila',roaster:'',roastDate:'',start:17,active:false}],brews:[]};
+  db=d;
+  const ideal={b1:{espresso:21,v60:24},b2:{espresso:15,v60:22,aeropress:19},b3:{espresso:22},b4:{espresso:18,v60:23}};
+  const cur={};
+  for(let day=20;day>=0;day--){
+    const n=day===0?2:1+Math.floor(rnd()*3.2);
+    const hours=[7.5,10,13.5,15.5,9,16.5].slice(0,n).map(h=>h+rnd()*1.2);
+    hours.forEach((h,i)=>{
+      const ts=today.getTime()-day*DAY+h*36e5;if(ts>now-5*6e4)return;
+      if(rnd()<.12){d.brews.push({id:uid(),quick:true,ts});return}
+      const pool=day>12?['b4','b1']:['b1','b2','b3'];const beanId=pool[Math.floor(rnd()*pool.length)];
+      const opts=Object.keys(ideal[beanId]);let methodId=rnd()<.7?'espresso':opts[Math.floor(rnd()*opts.length)];
+      const m=methodOf(methodId),type=m.hasTypes?(rnd()<.8?'double':'single'):null,k=beanId+methodId+(type||'');
+      const grind=cur[k]??(methodId==='espresso'?d.beans.find(b=>b.id===beanId).start:ideal[beanId][methodId]-2);
+      const mid=(m.min+m.max)/2,target=targetOf(m,type);
+      const yld=Math.round(target*(0.94+rnd()*0.12));
+      const time=Math.max(5,Math.round((mid+(ideal[beanId][methodId]-grind)*m.secPerStep*0.9+(rnd()-.5)*m.secPerStep*1.2)*yld/target));
+      const taste=m.mode==='taste'?(grind<ideal[beanId][methodId]?'bitter':grind>ideal[beanId][methodId]?'sauer':'gut'):(rnd()<.4?'gut':'');
+      const b={id:uid(),beanId,methodId,type,grind,time,yield:yld,taste,note:'',ts};
+      const a=analyse(b,prevOf(b));cur[k]=a.next;d.brews.push(b);
+      d.last={bean:beanId,method:methodId,type:type||d.last.type};
+    });
+  }
+  return d;
+}
+function migrate(old){
+  const s={single:25,double:50,min:25,max:30,step:1,dir:'coarse',...old.settings};
+  const methods=PRESETS.map(p=>({...p}));Object.assign(methods[0],{single:s.single,double:s.double,min:s.min,max:s.max,step:s.step,dir:s.dir});
+  return {v:2,methods,beans:(old.beans||[]).map(b=>({...b,active:true})),brews:(old.shots||[]).map(x=>({...x,methodId:'espresso'})),demo:false,last:{bean:old.lastBean,method:'espresso',type:old.lastType}};
+}
+let db={methods:PRESETS.map(p=>({...p})),beans:[],brews:[]};
+function load(){
+  try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r);
+    const o=localStorage.getItem(OLDKEY);if(o){const old=JSON.parse(o);if(!old.demo){const d=migrate(old);localStorage.setItem(KEY,JSON.stringify(d));return d}}}catch(e){}
+  return demoData();
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}}
+
+/* ---------- Kern: Auswertung und Mahlgrad-Vorschlag ---------- */
+function analyse(b,prev){
+  const m=methodOf(b.methodId);if(!m||b.quick)return {status:'none',eff:null,delta:0,next:b.grind,why:[]};
+  const target=targetOf(m,b.type),why=[];
+  const eff=b.yield>0?b.time*target/b.yield:b.time;
+  let status='ok',delta=0,steps=0,coarser=false;
+  const turn=(c,n)=>{coarser=c;steps=n;const up=(c&&m.dir==='coarse')||(!c&&m.dir==='fine');delta=(up?1:-1)*n*m.step};
+  if(m.mode==='taste'){
+    if(!b.taste){status='none';why.push(`Bei ${m.name} richtet sich der Vorschlag nach dem Geschmack. Trag beim nächsten Mal ein, ob es sauer, lecker oder bitter war.`)}
+    else if(b.taste==='gut'){why.push(`Lecker! Bleib bei Mahlgrad ${fmt(b.grind)}.`)}
+    else if(b.taste==='sauer'){status='fast';why.push('Sauer heißt meistens: Das Wasser hat zu wenig aus dem Kaffee gelöst. Feiner gemahlen gibt es mehr Oberfläche.');turn(false,1)}
+    else{status='slow';why.push('Bitter heißt meistens: Das Wasser hat zu viel gelöst. Gröber gemahlen löst es weniger.');turn(true,1)}
+  }else{
+    if(b.yield>0&&Math.abs(b.yield-target)/target>0.08)why.push(`Du hast ${fmt(b.yield)} g statt ${fmt(target)} g bezogen. Ich rechne die Zeit deshalb auf ${fmt(target)} g um: ${fmt(b.time)} s × ${fmt(target)} / ${fmt(b.yield)} = ${fmt(eff)} s.`);
+    if(eff>m.max)status='slow';else if(eff<m.min)status='fast';
+    if(status==='ok'){
+      why.push(`${fmtT(eff)} liegt im Zielbereich von ${fmtT(m.min)} bis ${fmtT(m.max)}. Der Mahlgrad passt, also bleib bei ${fmt(b.grind)}.`);
+      if(b.taste==='sauer')why.push('Schmeckt trotzdem sauer? Dann eine Stufe feiner probieren oder etwas mehr Menge durchlaufen lassen.');
+      if(b.taste==='bitter')why.push('Schmeckt trotzdem bitter? Dann eine Stufe gröber probieren oder etwas früher stoppen.');
+    }else{
+      const dev=status==='slow'?eff-m.max:m.min-eff;
+      let n=Math.min(3,Math.ceil(dev/m.secPerStep));
+      if(status==='slow')why.push(`${fmtT(eff)} ist ${fmt(dev)} s länger als die Zielzeit (bis ${fmtT(m.max)}). Das Wasser kommt zu langsam durch, das Pulver ist also zu fein.`);
+      else why.push(`${fmtT(eff)} ist ${fmt(dev)} s kürzer als die Zielzeit (ab ${fmtT(m.min)}). Das Wasser läuft zu schnell durch, das Pulver ist also zu grob.`);
+      why.push(`Faustregel für ${m.name}: pro angefangene ${fmt(m.secPerStep)} s Abweichung ein Schritt, höchstens 3. Hier also ${n} ${n===1?'Schritt':'Schritte'}.`);
+      const pa=prev?analyse(prev,null):null;
+      if(pa&&(pa.status==='slow'||pa.status==='fast')&&pa.status!==status&&n>1){n=Math.max(1,Math.floor(n/2));why.push(`Beim letzten Mal war es genau andersherum. Du pendelst um den Zielwert, deshalb nur ${n} ${n===1?'Schritt':'Schritte'}.`)}
+      turn(status==='slow',n);
+    }
+  }
+  if(delta)why.push(`Nächstes Mal ${coarser?'gröber':'feiner'} mahlen: von ${fmt(b.grind)} auf ${fmt(b.grind+delta)}.`);
+  return {status,eff,delta,coarser,next:Math.round((b.grind+delta)*100)/100,why};
+}
+const statusPill=s=>s==='ok'?'<span class="pill ok">Im Ziel</span>':s==='slow'?'<span class="pill slow">Zu langsam</span>':s==='fast'?'<span class="pill fast">Zu schnell</span>':'<span class="pill none">Ohne Wertung</span>';
+const tastePill=(m,s)=>m&&m.mode==='taste'?(s==='ok'?'<span class="pill ok">Lecker</span>':s==='slow'?'<span class="pill slow">Bitter</span>':s==='fast'?'<span class="pill fast">Sauer</span>':statusPill(s)):statusPill(s);
+function brewsOf(beanId,methodId,type){return db.brews.filter(s=>!s.quick&&s.beanId===beanId&&(!methodId||s.methodId===methodId)&&(type===undefined||s.type===type)).sort((a,b)=>a.ts-b.ts)}
+function prevOf(b){const l=brewsOf(b.beanId,b.methodId,b.type).filter(s=>s.ts<b.ts);return l[l.length-1]||null}
+function nextGrind(beanId,methodId,type){
+  const l=brewsOf(beanId,methodId,type);const last=l[l.length-1];
+  if(last)return analyse(last,prevOf(last)).next;
+  const lm=brewsOf(beanId,methodId);if(lm.length)return lm[lm.length-1].grind;
+  const bean=db.beans.find(b=>b.id===beanId);return bean&&bean.start!=null&&bean.start!==''&&methodId==='espresso'?+bean.start:null;
+}
+
+/* ---------- Grafiken ---------- */
+function gauge(t,m){
+  const steps=[10,15,30,60,90,120,180,240];const L=steps.find(s=>s*3>=m.max*1.4)||300,M=L*3,cx=100,cy=100,r=78;
+  const p=(v,rr=r)=>{const a=Math.PI*(1-Math.min(Math.max(v,0),M)/M);return [cx+rr*Math.cos(a),cy-rr*Math.sin(a)]};
+  const arc=(a,b)=>{const[x1,y1]=p(a),[x2,y2]=p(b);return `M${x1.toFixed(1)} ${y1.toFixed(1)}A${r} ${r} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}`};
+  const lab=v=>v<90?v:Math.floor(v/60)+':'+String(v%60).padStart(2,'0');
+  let ticks='';for(let i=0;i<=9;i++){const v=i*L/3,major=i%3===0;const[x1,y1]=p(v,r-9),[x2,y2]=p(v,r-(major?0:4));ticks+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--muted)" stroke-width="${major?1.6:1}"/>`;if(major){const[lx,ly]=p(v,r-20);ticks+=`<text x="${lx}" y="${ly+3}" text-anchor="middle">${lab(v)}</text>`}}
+  const ang=180*Math.min(Math.max(t,0),M)/M-90;
+  return `<svg class="gauge" viewBox="0 0 200 124" role="img" aria-label="Durchlaufzeit ${fmtT(t)}, Ziel ${fmtT(m.min)} bis ${fmtT(m.max)}">
+  <path d="${arc(0,M)}" fill="none" stroke="var(--line)" stroke-width="10"/>
+  <path d="${arc(m.min,m.max)}" fill="none" stroke="var(--zone)" stroke-width="10"/>${ticks}
+  <g class="needle" style="transform-origin:100px 100px;transform:rotate(${ang}deg)"><line x1="100" y1="100" x2="100" y2="34" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round"/></g>
+  <circle cx="100" cy="100" r="6" fill="var(--ink)"/><text x="100" y="121" text-anchor="middle" style="font-size:9px">${M>=90?'Minuten':'Sekunden'}</text></svg>`;
+}
+function spark(list,m){
+  if(!m||m.mode==='taste'||!list.length)return '';
+  const W=300,H=46,lo=Math.max(0,m.min-(m.max-m.min)*2-5),hi=m.max+(m.max-m.min)*2+10;
+  const pts=list.slice(-12).map(s=>analyse(s,null).eff);
+  const y=v=>H-3-(Math.min(Math.max(v,lo),hi)-lo)/(hi-lo)*(H-6);
+  const x=i=>pts.length===1?W/2:6+i*(W-12)/(pts.length-1);
+  const line=pts.map((v,i)=>`${i?'L':'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join('');
+  const dots=pts.map((v,i)=>{const c=v>m.max?'var(--slow)':v<m.min?'var(--fast)':'var(--zone)';return `<circle cx="${x(i)}" cy="${y(v)}" r="${i===pts.length-1?4:2.6}" fill="${c}"/>`}).join('');
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><rect x="0" y="${y(m.max)}" width="${W}" height="${y(m.min)-y(m.max)}" fill="var(--zone-soft)"/><path d="${line}" fill="none" stroke="var(--muted)" stroke-width="1.4" vector-effect="non-scaling-stroke"/>${dots}</svg>`;
+}
+function bars(vals,labels,hi){
+  const W=320,H=120,top=16,bottom=18,n=vals.length,gap=n>10?3:8,bw=(W-gap*(n-1))/n,max=Math.max(1,...vals);
+  return `<svg class="bars" viewBox="0 0 ${W} ${H}" role="img" aria-label="${vals.map((v,i)=>labels[i]+': '+v).join(', ')}">`+
+    `<line x1="0" x2="${W}" y1="${H-bottom}" y2="${H-bottom}" stroke="var(--line)"/>`+
+    vals.map((v,i)=>{const h=v/max*(H-top-bottom),x=i*(bw+gap),y=H-bottom-h;
+      return `${v?`<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="3" fill="${i===hi?'var(--accent)':'var(--muted)'}" opacity="${i===hi?1:.45}"/>`:''}`+
+      (v&&n<=10?`<text class="v" x="${x+bw/2}" y="${y-4}" text-anchor="middle">${v}</text>`:'')+
+      (labels[i]!==''?`<text x="${x+bw/2}" y="${H-4}" text-anchor="middle">${labels[i]}</text>`:'')}).join('')+'</svg>';
+}
+
+/* ---------- Ansicht: Start ---------- */
+function startOfDay(t){const d=new Date(t);d.setHours(0,0,0,0);return d.getTime()}
+function sinceText(){
+  const last=db.brews.reduce((a,b)=>Math.max(a,b.ts),0);
+  if(!last)return {big:'Noch kein Kaffee eingetragen',quip:'Zeit für den ersten Bezug.'};
+  const min=Math.floor((Date.now()-last)/6e4);
+  if(min<1)return {big:'Gerade eben',quip:'Prost! Genieß ihn.'};
+  if(min<60)return {big:`vor ${min} ${min===1?'Minute':'Minuten'}`,quip:'Koffeinspiegel: bestens.'};
+  const h=Math.floor(min/60);
+  if(h<24)return {big:`vor ${h} Std. ${min%60} Min.`,quip:h<4?'Alles im grünen Bereich.':h<8?'Langsam wird es Zeit für den nächsten.':'Die Maschine wartet schon.'};
+  const d=Math.floor(h/24);return {big:`Seit ${d} ${d===1?'Tag':'Tagen'} kein Kaffee`,quip:d<3?'Alles okay bei dir?':'Die Bohnen werden langsam alt …'};
+}
+function renderHome(){
+  const now=Date.now(),t0=startOfDay(now),all=db.brews,s=sinceText();
+  const tested=db.beans.filter(b=>all.some(x=>x.beanId===b.id)).length;
+  const active=db.beans.filter(b=>b.active);
+  const today=all.filter(b=>b.ts>=t0).length;
+  const days=[...Array(7)].map((_,i)=>t0-(6-i)*DAY);
+  const week=days.map(d=>all.filter(b=>b.ts>=d&&b.ts<d+DAY).length);
+  const wd=['So','Mo','Di','Mi','Do','Fr','Sa'];
+  const weekLabels=days.map((d,i)=>i===6?'Heute':wd[new Date(d).getDay()]);
+  const H0=5,H1=23,recent=all.filter(b=>b.ts>=t0-29*DAY);
+  const hours=[...Array(H1-H0)].map((_,i)=>recent.filter(b=>new Date(b.ts).getHours()===H0+i).length);
+  const peak=hours.indexOf(Math.max(...hours));
+  const perDay=new Map();all.forEach(b=>{const k=startOfDay(b.ts);perDay.set(k,(perDay.get(k)||0)+1)});
+  const record=Math.max(0,...perDay.values());
+  const wsum=week.reduce((a,b)=>a+b,0);
+  const methodsUsed={};all.forEach(b=>{if(b.methodId)methodsUsed[b.methodId]=(methodsUsed[b.methodId]||0)+1});
+  const fav=Object.entries(methodsUsed).sort((a,b)=>b[1]-a[1])[0];
+  $('#v-home').innerHTML=`
+    ${db.demo?'<div class="banner"><span>Das sind Beispieldaten zum Ausprobieren.</span><button class="link" data-act="demo-clear">Beispiele löschen</button></div>':''}
+    <div class="hero"><div class="eyebrow">Letzter Kaffee</div><div class="since">${esc(s.big)}</div><div class="quip">${esc(s.quip)}</div>
+      <button data-act="quick">+ 1 Tasse getrunken</button></div>
+    <div class="tiles">
+      <div class="tile"><b>${today}</b><span>${today===1?'Tasse':'Tassen'} heute</span></div>
+      <div class="tile"><b>${all.length}</b><span>Tassen insgesamt</span></div>
+      <div class="tile"><b>${tested}</b><span>Sorten getestet</span></div>
+      <div class="tile"><b>${active.length}</b><span>Sorten zu Hause</span></div>
+    </div>
+    <div class="card stack"><div class="row between"><h2>Zu Hause</h2><button class="link" data-act="beans">Bearbeiten</button></div>
+      ${active.length?`<div class="namechips">${active.map(b=>`<button class="pill home" style="border:none;font-size:.85rem;padding:6px 12px" data-bean="${b.id}">${esc(b.name)}</button>`).join('')}</div>`:'<p class="small muted" style="margin:0">Keine Sorte als „zu Hause“ markiert. Das geht unter Sorten.</p>'}</div>
+    <div class="card stack"><div class="row between"><h2>Diese Woche</h2><span class="small muted">${wsum} ${wsum===1?'Tasse':'Tassen'} · Ø ${fmt(wsum/7)} pro Tag</span></div>${bars(week,weekLabels,6)}</div>
+    <div class="card stack"><div class="row between"><h2>Wann du Kaffee trinkst</h2><span class="small muted">letzte 30 Tage</span></div>
+      ${recent.length?bars(hours,hours.map((_,i)=>(H0+i)%3===0?(H0+i)+'':''),peak)+`<p class="small muted" style="margin:0">Die meisten Tassen gibt es zwischen ${H0+peak} und ${H0+peak+1} Uhr.</p>`:'<p class="small muted" style="margin:0">Noch keine Tassen in den letzten 30 Tagen.</p>'}</div>
+    <div class="card"><div class="stats">
+      <div class="stat"><b>${record}</b><span>Rekord an einem Tag</span></div>
+      <div class="stat"><b>${perDay.size}</b><span>Kaffee-Tage</span></div>
+      <div class="stat"><b style="font-family:var(--font-body);font-size:1rem">${fav?esc(methodOf(fav[0])?.name||'–'):'–'}</b><span>Liebste Zubereitung</span></div></div></div>`;
+}
+$('#v-home').addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.act==='quick'){db.brews.push({id:uid(),quick:true,ts:Date.now()});save();renderHome();toast('Tasse gezählt. Prost!')}
+  else if(t.dataset.act==='beans'){renderBeans();show('beans')}
+  else if(t.dataset.act==='demo-clear'){db={v:2,methods:PRESETS.map(p=>({...p})),beans:[],brews:[],demo:false,last:{}};save();renderAll();$('#result').innerHTML='';toast('Beispiele gelöscht. Leg jetzt unter „Sorten“ deine erste Sorte an.')}
+  else if(t.dataset.bean)openBean(t.dataset.bean);
+});
+
+/* ---------- Ansicht: Bezug ---------- */
+let form={method:null,type:'double',taste:''};
+function setSeg(el,val){el.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===val?'true':'false'))}
+function renderLog(){
+  if(!methodOf(form.method))form.method=methodOf(db.last?.method)?db.last.method:db.methods[0]?.id;
+  if(db.last?.type)form.type=db.last.type;
+  $('#f-method').innerHTML=db.methods.map(m=>`<button type="button" data-v="${m.id}">${esc(m.name)}</button>`).join('');
+  const sel=$('#f-bean'),act=db.beans.filter(b=>b.active),rest=db.beans.filter(b=>!b.active);
+  sel.innerHTML=!db.beans.length?'<option value="">Bitte zuerst eine Sorte anlegen</option>':
+    (act.length?`<optgroup label="Zu Hause">${act.map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('')}</optgroup>`:'')+
+    (rest.length?`<optgroup label="Weitere">${rest.map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('')}</optgroup>`:'');
+  if(db.last?.bean&&db.beans.some(b=>b.id===db.last.bean))sel.value=db.last.bean;
+  setSeg($('#f-taste'),form.taste);
+  methodChanged();
+}
+function methodChanged(){
+  const m=methodOf(form.method);if(!m)return;
+  setSeg($('#f-method'),m.id);setSeg($('#f-type'),form.type);
+  $('#f-type-wrap').hidden=!m.hasTypes;
+  $('#f-yield-label').textContent=m.hasTypes?'Menge in der Tasse (g)':'Kaffee im Gefäß (g)';
+  $('#f-time').placeholder=Math.round((m.min+m.max)/2);
+  $('#taste-opt').textContent=m.mode==='taste'?'(wichtig für den Vorschlag)':'(optional)';
+  prefill();timeHint();
+}
+function prefill(){
+  const m=methodOf(form.method),type=m.hasTypes?form.type:null;
+  const g=nextGrind($('#f-bean').value,m.id,type);
+  $('#f-grind').value=g??'';$('#f-yield').placeholder=fmt(targetOf(m,type));
+}
+function timeHint(){const v=+$('#f-time').value;$('#f-time-hint').textContent=v>=60?'= '+fmtT(v):''}
+$('#f-time').addEventListener('input',timeHint);
+$('#f-bean').addEventListener('change',prefill);
+$('#f-method').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;form.method=b.dataset.v;methodChanged()});
+$('#f-type').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;form.type=b.dataset.v;setSeg($('#f-type'),form.type);prefill()});
+$('#f-taste').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;form.taste=form.taste===b.dataset.v?'':b.dataset.v;setSeg($('#f-taste'),form.taste)});
+
+let tStart=null,tRaf=null;
+$('#timer-btn').addEventListener('click',()=>{
+  const btn=$('#timer-btn');
+  if(tStart==null){tStart=performance.now();btn.textContent='Stopp';btn.classList.add('running');
+    const tick=()=>{$('#f-time').value=Math.round((performance.now()-tStart)/100)/10;timeHint();tRaf=requestAnimationFrame(tick)};tick();
+    if(navigator.wakeLock)navigator.wakeLock.request('screen').catch(()=>{});
+  }else{cancelAnimationFrame(tRaf);$('#f-time').value=Math.round((performance.now()-tStart)/1000);timeHint();tStart=null;btn.textContent='Stoppuhr';btn.classList.remove('running')}
+});
+
+$('#shot-form').addEventListener('submit',e=>{
+  e.preventDefault();
+  const num=id=>{const v=$(id).value.replace(',','.');return v===''?NaN:+v};
+  const m=methodOf(form.method),type=m.hasTypes?form.type:null;
+  const beanId=$('#f-bean').value,grind=num('#f-grind'),time=num('#f-time');let y=num('#f-yield');
+  if(isNaN(y))y=targetOf(m,type);
+  const err=!beanId?'Lege zuerst unter „Sorten“ eine Kaffeesorte an.':isNaN(grind)?'Bitte den Mahlgrad eintragen.':isNaN(time)||time<=0?'Bitte die Durchlaufzeit in Sekunden eintragen.':y<=0?'Die Menge muss größer als 0 g sein.':'';
+  $('#form-error').hidden=!err;$('#form-error').textContent=err;if(err)return;
+  const b={id:uid(),beanId,methodId:m.id,type,grind,time,yield:y,taste:form.taste,note:$('#f-note').value.trim(),ts:Date.now()};
+  const prev=prevOf(b);
+  db.brews.push(b);db.last={bean:beanId,method:m.id,type:type||form.type};save();
+  const a=analyse(b,prev);showResult(b,a);
+  $('#f-time').value='';$('#f-yield').value='';$('#f-note').value='';form.taste='';setSeg($('#f-taste'),'');timeHint();
+  $('#f-grind').value=a.next;toast('Bezug gespeichert');
+});
+function showResult(b,a){
+  const bean=db.beans.find(x=>x.id===b.beanId),m=methodOf(b.methodId);
+  $('#result').innerHTML=`<div class="card result ${a.status} stack">
+    <div class="row between"><div><div class="eyebrow">${esc(bean?bean.name:'')} · ${esc(m.name)}${b.type?' '+typeLabel(b.type):''}</div><h2>Auswertung</h2></div>${tastePill(m,a.status)}</div>
+    ${m.mode==='time'?gauge(a.eff,m):''}
+    <div class="next"><span class="eyebrow">Nächster Mahlgrad</span><span class="big">${fmt(a.next)}</span><span class="muted">${a.delta?`${a.delta>0?'+':'–'}${fmt(Math.abs(a.delta))} · ${a.coarser?'gröber':'feiner'}`:'gleich lassen'}</span></div>
+    <ol class="why">${a.why.map(w=>`<li>${esc(w)}</li>`).join('')}</ol></div>`;
+}
+
+/* ---------- Ansicht: Sorten ---------- */
+function beanCard(b){
+  const l=brewsOf(b.id),last=l[l.length-1],m=last?methodOf(last.methodId):null;
+  const ll=last?brewsOf(b.id,last.methodId,last.type):[];
+  const scored=l.map(x=>analyse(x,null).status).filter(s=>s!=='none'),hits=scored.filter(s=>s==='ok').length;
+  const nx=last?nextGrind(b.id,last.methodId,last.type):b.start;
+  return `<button class="card bean" data-bean="${b.id}">
+    <div class="head"><div><h3>${esc(b.name)}</h3><div class="small muted">${[b.roaster,last?`zuletzt ${new Date(last.ts).toLocaleDateString('de-DE',{day:'numeric',month:'short'})} · ${m?esc(m.name):''}`:''].filter(Boolean).join(' · ')}</div></div>${last?tastePill(m,analyse(last,null).status):'<span class="pill type">neu</span>'}</div>
+    ${spark(ll,m)}
+    <div class="stats"><div class="stat"><b>${nx!=null&&nx!==''?fmt(+nx):'–'}</b><span>Nächster Mahlgrad</span></div><div class="stat"><b>${hits}/${scored.length}</b><span>Im Ziel</span></div><div class="stat"><b>${l.length}</b><span>Tassen</span></div></div>
+  </button>`;
+}
+function renderBeans(){
+  const list=$('#bean-list');
+  if(!db.beans.length){list.innerHTML='<div class="card muted">Noch keine Kaffeesorte. Tippe auf „+ Sorte“, um die erste anzulegen.</div>';return}
+  const last=b=>{const l=brewsOf(b.id);return l.length?l[l.length-1].ts:0};
+  const sorted=[...db.beans].sort((a,b)=>last(b)-last(a));
+  const act=sorted.filter(b=>b.active),old=sorted.filter(b=>!b.active);
+  list.innerHTML=(act.length?`<div class="eyebrow">Zu Hause (${act.length})</div>${act.map(beanCard).join('')}`:'')+(old.length?`<div class="eyebrow" style="margin-top:8px">Schon getrunken (${old.length})</div>${old.map(beanCard).join('')}`:'');
+}
+$('#bean-list').addEventListener('click',e=>{const b=e.target.closest('[data-bean]');if(b)openBean(b.dataset.bean)});
+let editing=null;
+function openBeanForm(bean){
+  editing=bean?bean.id:null;$('#bean-form-title').textContent=bean?'Sorte bearbeiten':'Neue Sorte';
+  $('#b-name').value=bean?bean.name:'';$('#b-roaster').value=bean?bean.roaster:'';$('#b-date').value=bean?bean.roastDate:'';$('#b-start').value=bean&&bean.start!=null?bean.start:'';$('#b-active').checked=bean?!!bean.active:true;
+  show('beans');$('#bean-form').hidden=false;$('#b-name').focus();
+}
+$('#bean-add-btn').addEventListener('click',()=>openBeanForm(null));
+$('#bean-cancel').addEventListener('click',()=>{$('#bean-form').hidden=true});
+$('#bean-form').addEventListener('submit',e=>{
+  e.preventDefault();const name=$('#b-name').value.trim();if(!name){$('#b-name').focus();return}
+  const st=$('#b-start').value.replace(',','.');
+  const data={name,roaster:$('#b-roaster').value.trim(),roastDate:$('#b-date').value,start:st===''?null:+st,active:$('#b-active').checked};
+  if(editing)Object.assign(db.beans.find(b=>b.id===editing),data);else{const id=uid();db.beans.push({id,...data});db.last={...db.last,bean:id}}
+  save();$('#bean-form').hidden=true;renderBeans();renderLog();toast(editing?'Sorte gespeichert':'Sorte angelegt');
+});
+
+/* ---------- Ansicht: Sorte im Detail ---------- */
+let currentBean=null,confirmDel=null;
+function openBean(id){currentBean=id;confirmDel=null;renderBean();show('bean')}
+function renderBean(){
+  const b=db.beans.find(x=>x.id===currentBean);if(!b){show('beans');return}
+  const l=brewsOf(b.id),rev=[...l].reverse();
+  const groups=[];l.forEach(x=>{if(!groups.some(g=>g.m===x.methodId&&g.t===x.type))groups.push({m:x.methodId,t:x.type})});
+  $('#v-bean').innerHTML=`
+   <div class="row between"><button class="link" data-act="back">‹ Alle Sorten</button><button class="link" data-act="edit">Bearbeiten</button></div>
+   <header class="stack" style="gap:8px"><div class="eyebrow">${esc(b.roaster||'Kaffeesorte')}${b.roastDate?' · geröstet '+new Date(b.roastDate).toLocaleDateString('de-DE'):''}</div><h1>${esc(b.name)}</h1>
+   <label class="check" for="d-active"><input id="d-active" type="checkbox" ${b.active?'checked':''}>Gerade zu Hause</label></header>
+   ${groups.map(g=>{const m=methodOf(g.m);if(!m)return '';const lt=l.filter(x=>x.methodId===g.m&&x.type===g.t),ls=lt[lt.length-1],a=analyse(ls,prevOf(ls));
+     const sc=lt.map(x=>analyse(x,null).status).filter(s=>s!=='none');
+     return `<div class="card stack"><div class="row between"><h2>${esc(m.name)}${g.t?' · '+typeLabel(g.t):''}</h2>${tastePill(m,a.status)}</div>${spark(lt,m)}
+   <div class="stats"><div class="stat"><b>${fmt(a.next)}</b><span>Nächster Mahlgrad</span></div><div class="stat"><b>${sc.filter(s=>s==='ok').length}/${sc.length}</b><span>Im Ziel</span></div><div class="stat"><b>${fmt(ls.grind)}</b><span>Zuletzt</span></div></div></div>`}).join('')||'<div class="card muted">Noch keine Bezüge mit dieser Sorte.</div>'}
+   ${rev.length?`<div class="card"><h2 style="margin-bottom:4px">Verlauf</h2><div class="shots">${rev.map(s=>{const m=methodOf(s.methodId),a=analyse(s,null);return `<div class="shot">
+     <div><div class="small muted">${new Date(s.ts).toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'short'})} · <span class="pill type">${esc(m?m.name:'')}${s.type?' '+typeLabel(s.type):''}</span>${s.taste?' · '+(s.taste==='gut'?'lecker':s.taste):''}</div>
+     <div class="vals">Mahlgrad ${fmt(s.grind)} · ${fmtT(s.time)} · ${fmt(s.yield)} g</div>${s.note?`<div class="small muted">${esc(s.note)}</div>`:''}</div>
+     <div style="text-align:right;display:flex;flex-direction:column;gap:6px;align-items:flex-end">${tastePill(m,a.status)}${confirmDel===s.id?`<span class="confirm"><button class="danger small" data-del="${s.id}">Löschen</button><button class="small" data-act="nodel">Nein</button></span>`:`<button class="link small" data-ask="${s.id}">entfernen</button>`}</div></div>`}).join('')}</div></div>`:''}
+   <div class="card stack"><h3>Sorte löschen</h3>${confirmDel==='bean'?`<div class="confirm"><span class="small">Sorte und alle ${l.length} Bezüge löschen?</span><button class="danger" data-act="delbean">Ja, löschen</button><button data-act="nodel">Abbrechen</button></div>`:'<button class="danger" data-act="askbean" style="align-self:flex-start">Sorte löschen</button>'}</div>`;
+}
+$('#v-bean').addEventListener('change',e=>{if(e.target.id==='d-active'){db.beans.find(b=>b.id===currentBean).active=e.target.checked;save();renderLog();toast(e.target.checked?'Als „zu Hause“ markiert':'Nicht mehr zu Hause')}});
+$('#v-bean').addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;const act=t.dataset.act;
+  if(act==='back'){renderBeans();show('beans')}
+  else if(act==='edit')openBeanForm(db.beans.find(b=>b.id===currentBean));
+  else if(t.dataset.ask){confirmDel=t.dataset.ask;renderBean()}
+  else if(t.dataset.del){db.brews=db.brews.filter(s=>s.id!==t.dataset.del);confirmDel=null;save();renderBean();renderLog();toast('Bezug entfernt')}
+  else if(act==='nodel'){confirmDel=null;renderBean()}
+  else if(act==='askbean'){confirmDel='bean';renderBean()}
+  else if(act==='delbean'){db.beans=db.beans.filter(b=>b.id!==currentBean);db.brews=db.brews.filter(s=>s.beanId!==currentBean);save();renderBeans();renderLog();show('beans');toast('Sorte gelöscht')}
+});
+
+/* ---------- Ansicht: Einstellungen (Zubereitungen) ---------- */
+let openMethod=null,delMethod=null;
+const field=(id,label,val,hint)=>`<label for="${id}">${label}<input id="${id}" type="number" inputmode="decimal" step="any" value="${val??''}">${hint?`<span class="hint">${hint}</span>`:''}</label>`;
+function renderSettings(){
+  $('#method-list').innerHTML=db.methods.map(m=>`<details class="method" data-m="${m.id}" ${openMethod===m.id?'open':''}>
+    <summary><div><h3>${esc(m.name)}</h3><div class="small muted">${m.hasTypes?`${fmt(m.single)} / ${fmt(m.double)} g`:`${fmt(m.yield)} g`} · ${fmtT(m.min)} bis ${fmtT(m.max)} · ${m.mode==='time'?'Vorschlag nach Zeit':'Vorschlag nach Geschmack'}</div></div></summary>
+    <form class="stack" data-m="${m.id}" novalidate>
+      <label for="m-${m.id}-name">Name<input id="m-${m.id}-name" type="text" value="${esc(m.name)}"></label>
+      <div><div class="eyebrow" style="margin-bottom:6px">Mahlgrad-Vorschlag richtet sich nach</div>
+        <div class="seg" data-seg="mode"><button type="button" data-v="time" aria-pressed="${m.mode==='time'}">Durchlaufzeit</button><button type="button" data-v="taste" aria-pressed="${m.mode==='taste'}">Geschmack</button></div></div>
+      <label class="check" for="m-${m.id}-types"><input id="m-${m.id}-types" type="checkbox" ${m.hasTypes?'checked':''}>Single und Double Shot unterscheiden</label>
+      <div class="grid2">${m.hasTypes?field(`m-${m.id}-single`,'Ziel Single (g)',m.single)+field(`m-${m.id}-double`,'Ziel Double (g)',m.double):field(`m-${m.id}-yield`,'Zielmenge (g)',m.yield)+field(`m-${m.id}-dose`,'Kaffeepulver (g)',m.dose)}</div>
+      <div class="grid2">${field(`m-${m.id}-min`,'Zielzeit von (s)',m.min,m.min>=60?'= '+fmtT(m.min):'')+field(`m-${m.id}-max`,'Zielzeit bis (s)',m.max,m.max>=60?'= '+fmtT(m.max):'')}</div>
+      <div class="grid2">${field(`m-${m.id}-sps`,'Sekunden pro Stufe',m.secPerStep,'So viel Abweichung ergibt einen Mahlgrad-Schritt')+field(`m-${m.id}-step`,'Kleinster Schritt',m.step)}</div>
+      <div class="grid2">${m.hasTypes?field(`m-${m.id}-dose`,'Kaffeepulver (g)',m.dose):''}${field(`m-${m.id}-temp`,'Wassertemperatur (°C)',m.temp)}</div>
+      <div><div class="eyebrow" style="margin-bottom:6px">Eine höhere Zahl an der Mühle bedeutet</div>
+        <div class="seg" data-seg="dir"><button type="button" data-v="coarse" aria-pressed="${m.dir==='coarse'}">gröber</button><button type="button" data-v="fine" aria-pressed="${m.dir==='fine'}">feiner</button></div></div>
+      <button type="submit" class="primary">Speichern</button>
+      <div class="row between"><button type="button" class="link" data-act="reset">${PRESETS.some(p=>p.id===m.id)?'Auf Standard zurücksetzen':''}</button>
+      ${delMethod===m.id?`<span class="confirm"><button type="button" class="danger" data-act="del">Ja, löschen</button><button type="button" data-act="nodel">Nein</button></span>`:(db.methods.length>1?'<button type="button" class="link danger" data-act="askdel">Zubereitung löschen</button>':'')}</div>
+    </form></details>`).join('');
+}
+const mlist=$('#method-list');
+mlist.addEventListener('toggle',e=>{const d=e.target.closest('details');if(d&&d.open)openMethod=d.dataset.m},true);
+mlist.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;const f=b.closest('form');if(!f)return;const m=methodOf(f.dataset.m);
+  const seg=b.closest('[data-seg]');if(seg){seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));return}
+  const act=b.dataset.act;
+  if(act==='reset'){const p=PRESETS.find(p=>p.id===m.id);if(p){Object.assign(m,{...p});save();renderSettings();renderLog();toast('Standardwerte wiederhergestellt')}}
+  else if(act==='askdel'){delMethod=m.id;renderSettings()}
+  else if(act==='nodel'){delMethod=null;renderSettings()}
+  else if(act==='del'){db.methods=db.methods.filter(x=>x.id!==m.id);delMethod=null;openMethod=null;save();renderSettings();renderLog();toast('Zubereitung gelöscht. Alte Einträge bleiben in den Tassen-Zahlen.')}
+});
+mlist.addEventListener('change',e=>{
+  if(!e.target.id.endsWith('-types'))return;const f=e.target.closest('form'),m=methodOf(f.dataset.m);
+  m.hasTypes=e.target.checked;if(m.hasTypes){m.single=m.single||Math.round(m.yield/2);m.double=m.double||m.yield}save();renderSettings();renderLog();
+});
+mlist.addEventListener('submit',e=>{
+  e.preventDefault();const f=e.target,m=methodOf(f.dataset.m),id=m.id;
+  const n=k=>{const el=$(`#m-${id}-${k}`);if(!el)return undefined;const v=el.value.replace(',','.');return v===''?null:+v};
+  const segv=k=>f.querySelector(`[data-seg="${k}"] [aria-pressed="true"]`)?.dataset.v;
+  const u={name:$(`#m-${id}-name`).value.trim()||m.name,mode:segv('mode'),dir:segv('dir'),min:n('min'),max:n('max'),secPerStep:n('sps'),step:n('step'),dose:n('dose'),temp:n('temp')};
+  if(m.hasTypes){u.single=n('single');u.double=n('double')}else u.yield=n('yield');
+  const bad=!(u.min>0&&u.max>u.min&&u.secPerStep>0&&u.step>0)||(m.hasTypes?!(u.single>0&&u.double>0):!(u.yield>0));
+  if(bad){toast('Bitte gültige Werte eintragen. „Bis“ muss größer als „von“ sein.');return}
+  Object.assign(m,u);save();renderSettings();renderLog();toast(`${m.name} gespeichert`);
+});
+$('#m-add').addEventListener('click',()=>{const id='m'+uid();db.methods.push({id,name:'Neue Zubereitung',hasTypes:false,yield:250,min:120,max:240,secPerStep:15,step:1,dir:'coarse',mode:'taste',dose:15,temp:92});openMethod=id;save();renderSettings();renderLog();
+  setTimeout(()=>{const el=$(`#m-${id}-name`);if(el){el.scrollIntoView({block:'center'});el.select()}},50)});
+
+const backup=()=>JSON.stringify({app:'siebtraeger-logbuch',exportedAt:new Date().toISOString(),...db},null,1);
+$('#exp-btn').addEventListener('click',()=>{const txt=backup();$('#io-text').value=txt;
+  if(navigator.clipboard)navigator.clipboard.writeText(txt).then(()=>toast('Sicherung kopiert'),()=>{$('#io-text').select();toast('Text markiert, bitte selbst kopieren')});else $('#io-text').select()});
+$('#dl-btn').addEventListener('click',()=>{try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([backup()],{type:'application/json'}));a.download='kaffee-sicherung-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();toast('Datei wird gespeichert')}catch(e){toast('Speichern ging nicht, nutze „Sicherung kopieren“')}});
+let pending=null;
+function stage(txt){try{const d=JSON.parse(txt);if(Array.isArray(d.shots)&&!d.brews){pending=migrate(d)}else{if(!Array.isArray(d.beans)||!Array.isArray(d.brews))throw 0;pending=d}$('#imp-confirm').hidden=false}catch(e){toast('Das ist keine gültige Sicherung.')}}
+$('#imp-btn').addEventListener('click',()=>stage($('#io-text').value));
+$('#imp-file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>stage(r.result);r.readAsText(f)});
+$('#imp-no').addEventListener('click',()=>{pending=null;$('#imp-confirm').hidden=true});
+$('#imp-yes').addEventListener('click',()=>{db={v:2,methods:pending.methods?.length?pending.methods:PRESETS.map(p=>({...p})),beans:pending.beans,brews:pending.brews,demo:false,last:pending.last||{}};pending=null;$('#imp-confirm').hidden=true;save();renderAll();toast('Daten wiederhergestellt')});
+
+/* ---------- Navigation ---------- */
+function show(v){
+  ['home','log','beans','bean','settings'].forEach(x=>$('#v-'+x).hidden=x!==v);
+  const tab=v==='bean'?'beans':v;
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.dataset.tab===tab?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));
+  window.scrollTo(0,0);
+}
+document.querySelector('nav.tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const t=b.dataset.tab;
+  if(t==='home')renderHome();if(t==='beans')renderBeans();if(t==='settings')renderSettings();show(t)});
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2600)}
+function renderAll(){renderHome();renderLog();renderBeans();renderSettings()}
+db=load();
+try{if(window.self!==window.top)$('#dl-btn').hidden=true}catch(e){$('#dl-btn').hidden=true}
+renderAll();
+setInterval(()=>{if(!$('#v-home').hidden)renderHome()},60000);
+})();
+</script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}</script>
+</body>
+</html>
