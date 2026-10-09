@@ -13,15 +13,13 @@
 <link rel="icon" href="icon-192.png">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html,body{margin:0}[hidden]{display:none!important}</style>
 <title>Marius' Roastbook</title>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Familjen+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap">
 <style>
 /* Layout: sticky header with menu on the left (drawer on phone, sidebar on wide screens); grinder dial is the signature element */
 :root{
   --bg:#edf2f6; --surface:#ffffff; --ink:#0c1a2c; --muted:#56687c; --line:#d5dfe8;
   --accent:#0f3a6b; --accent-ink:#ffffff; --accent-soft:#dde7f3;
   --teal:#0a8f8c; --teal-soft:#d2efec;
+  --m-espresso:#0f3a6b; --m-v60:#0a8f8c; --m-aeropress:#6b4fb8; --m-moka:#b8456b; --m-other:#4a6a8a;
   --zone:#0a8f8c; --zone-soft:#d2efec; --slow:#c0503a; --slow-soft:#f7e0da; --fast:#b0761a; --fast-soft:#f6ead2;
   --hero-a:#0b2a55; --hero-b:#0b6f78; --hero-ink:#f2f8fb;
   --font-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
@@ -31,11 +29,13 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#08111d; --surface:#0f1c2e; --ink:#e4edf6; --muted:#8fa2b7; --line:#1e3048;
   --accent:#6aaaf5; --accent-ink:#06111e; --accent-soft:#16294a; --teal:#3cc9c0; --teal-soft:#10302f;
+  --m-espresso:#6aaaf5; --m-v60:#3cc9c0; --m-aeropress:#a993f0; --m-moka:#f08ab0; --m-other:#9fb4cc;
   --zone:#3cc9c0; --zone-soft:#10302f; --slow:#f08a74; --slow-soft:#3a1f1a; --fast:#e8b45a; --fast-soft:#33270f;
   --hero-a:#0d2a52; --hero-b:#0a5a63; --hero-ink:#eef6fa; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#08111d; --surface:#0f1c2e; --ink:#e4edf6; --muted:#8fa2b7; --line:#1e3048;
   --accent:#6aaaf5; --accent-ink:#06111e; --accent-soft:#16294a; --teal:#3cc9c0; --teal-soft:#10302f;
+  --m-espresso:#6aaaf5; --m-v60:#3cc9c0; --m-aeropress:#a993f0; --m-moka:#f08ab0; --m-other:#9fb4cc;
   --zone:#3cc9c0; --zone-soft:#10302f; --slow:#f08a74; --slow-soft:#3a1f1a; --fast:#e8b45a; --fast-soft:#33270f;
   --hero-a:#0d2a52; --hero-b:#0a5a63; --hero-ink:#eef6fa; color-scheme:dark}
 *{box-sizing:border-box}
@@ -216,12 +216,15 @@ details.method form{padding:0 16px 16px}
 .itile[data-wide] b{font-family:var(--font-display);font-size:1rem;white-space:normal;line-height:1.2}
 .itile span:last-child{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
 @media (max-width:360px){.itiles{grid-template-columns:repeat(2,1fr)}}
+.quote{position:relative;padding:18px 18px 16px 52px;border-radius:18px;background:var(--surface);border:1px solid var(--line)}
+.quote::before{content:"„";position:absolute;left:14px;top:-6px;font-family:var(--font-display);font-size:4rem;font-weight:800;color:var(--teal);line-height:1}
+.quote p{margin:0;font-family:var(--font-display);font-size:1.12rem;font-weight:700;line-height:1.3;text-wrap:balance}
+.quote span{display:block;margin-top:6px;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.others span.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 @media (prefers-reduced-motion:no-preference){.needle{transition:transform .6s cubic-bezier(.3,1.4,.5,1)}}
 @media (prefers-reduced-motion:reduce){.drawer{transition:none}}
 </style>
-
-</head>
-<body>
+</head><body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <linearGradient id="beanGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1fb8b0"/><stop offset="1" stop-color="#0f3a6b"/></linearGradient>
@@ -295,11 +298,13 @@ details.method form{padding:0 16px 16px}
           <h2 id="bean-form-title">Neue Sorte</h2>
           <label for="b-name">Name<input id="b-name" type="text" placeholder="z. B. Brasil Santos"></label>
           <div class="grid2">
-            <label for="b-roaster">Rösterei<input id="b-roaster" type="text" placeholder="optional"></label>
+            <label for="b-roaster">Rösterei<input id="b-roaster" type="text" list="roaster-list" placeholder="optional" autocomplete="off"><datalist id="roaster-list"></datalist></label>
             <label for="b-date">Röstdatum<input id="b-date" type="date"></label>
           </div>
-          <div><div class="eyebrow" style="margin-bottom:6px">Geschmacksnoten</div><div class="chips wrapchips" id="b-notes"></div></div>
-          <label for="b-start">Start-Mahlgrad<input id="b-start" type="number" inputmode="decimal" step="any" placeholder="optional, z. B. 18"></label>
+          <div id="b-roasters" class="chips wrapchips" style="margin-top:-6px"></div>
+          <div><div class="eyebrow" style="margin-bottom:6px">Geschmacksnoten</div><div class="chips wrapchips" id="b-notes"></div>
+            <div class="row" style="margin-top:8px;flex-wrap:nowrap"><input id="b-note-new" type="text" placeholder="Eigene Note, z. B. Honig" aria-label="Eigene Geschmacksnote"><button type="button" id="b-note-add">Hinzufügen</button></div></div>
+          <div><div class="eyebrow" style="margin-bottom:6px">Start-Mahlgrad je Zubereitung <span class="hint">(optional)</span></div><div class="grid2" id="b-starts"></div></div>
           <label class="check" for="b-active"><input id="b-active" type="checkbox" checked>Gerade zu Hause</label>
           <div class="row"><button type="submit" class="primary" style="flex:1">Speichern</button><button type="button" id="bean-cancel">Abbrechen</button></div>
         </form>
@@ -348,6 +353,15 @@ details.method form{padding:0 16px 16px}
           <div class="row between"><h2>Zubereitungen</h2><button id="m-add">+ Zubereitung</button></div>
           <p class="small muted" style="margin:0">Tippe eine Zubereitung an, um Zielmenge, Zielzeit und Mühle anzupassen.</p>
           <div id="method-list" class="stack"></div>
+        </div>
+        <div class="card stack" id="share-card">
+          <h2>Sorten teilen</h2>
+          <p class="small muted" style="margin:0">Sorten mit Röster, Geschmacksnoten und Mahlgraden an ein anderes Handy schicken. Bezüge und Tassen bleiben hier.</p>
+          <div id="share-list" class="stack" style="gap:6px"></div>
+          <button id="share-btn" style="align-self:flex-start">Ausgewählte Sorten teilen</button>
+          <label for="share-in" style="margin-top:6px">Geteilte Sorten übernehmen (Nachricht hier einfügen)<textarea id="share-in" spellcheck="false" placeholder="Nachricht mit ROASTBOOK-SORTEN einfügen"></textarea></label>
+          <button id="share-take" style="align-self:flex-start">Sorten übernehmen</button>
+          <div id="share-confirm" class="confirm" hidden><span class="small" id="share-sum"></span><button id="share-yes">Ja, übernehmen</button><button id="share-no">Abbrechen</button></div>
         </div>
         <div class="card stack">
           <h2>Datensicherung</h2>
@@ -404,7 +418,7 @@ function demoData(){
   let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
   const now=Date.now(),today=new Date();today.setHours(0,0,0,0);
   const d={v:2,owner:'Marius',partner:'Barb',money:{...MONEY,before:450},methods:PRESETS.map(p=>({...p})),demo:true,last:{},
-    beans:[{id:'b1',name:'Brasil Santos',roaster:'Rösterei am Markt',roastDate:isoDaysAgo(16),start:18,active:true,notes:['Schokoladig','Nussig','Samtig']},
+    beans:[{id:'b1',name:'Brasil Santos',roaster:'Rösterei am Markt',roastDate:isoDaysAgo(16),start:18,starts:{espresso:18,v60:22},active:true,notes:['Schokoladig','Nussig','Samtig']},
       {id:'b2',name:'Äthiopien Yirgacheffe',roaster:'Kaffeekontor',roastDate:isoDaysAgo(9),start:16,active:true,notes:['Fruchtig','Blumig','Leicht']},
       {id:'b3',name:'Hausmischung Crema',roaster:'',roastDate:isoDaysAgo(34),start:20,active:true,notes:['Kräftig','Karamellig','Herb']},
       {id:'b4',name:'Kolumbien Huila',roaster:'',roastDate:'',start:17,active:false,notes:['Karamellig','Beerig']}],brews:[]};
@@ -491,8 +505,11 @@ function nextGrind(beanId,methodId,type){
   const l=brewsOf(beanId,methodId,type);const last=l[l.length-1];
   if(last)return analyse(last,prevOf(last)).next;
   const lm=brewsOf(beanId,methodId);if(lm.length)return lm[lm.length-1].grind;
-  const bean=db.beans.find(b=>b.id===beanId);return bean&&bean.start!=null&&bean.start!==''&&methodId==='espresso'?+bean.start:null;
+  return startOf(db.beans.find(b=>b.id===beanId),methodId);
 }
+function startOf(bean,methodId){if(!bean)return null;const v=bean.starts?.[methodId];if(v!=null&&v!=='')return +v;return methodId==='espresso'&&bean.start!=null&&bean.start!==''?+bean.start:null}
+/* Alle Zubereitungen einer Sorte mit ihrem aktuellen Mahlgrad */
+function methodValues(bean){const mks=markers(bean.id);return db.methods.map(m=>{const mk=mks.find(x=>x.m===m.id);const v=mk?mk.value:startOf(bean,m.id);return v==null?null:{m,mk,v,count:mks.filter(x=>x.m===m.id).reduce((a,x)=>a+x.count,0)}}).filter(Boolean).sort((a,b)=>b.count-a.count)}
 /* Der Marker pro Sorte und Zubereitung: Mahlgrad, der passt, oder der nächste Versuch */
 function markers(beanId){
   const l=brewsOf(beanId),groups=[];
@@ -502,7 +519,7 @@ function markers(beanId){
     .sort((x,y)=>y.count-x.count||y.last.ts-x.last.ts);
 }
 function grindRange(){
-  const g=db.brews.filter(b=>!b.quick&&b.grind!=null).map(b=>+b.grind).concat(db.beans.map(b=>b.start).filter(v=>v!=null&&v!=='').map(Number));
+  const g=db.brews.filter(b=>!b.quick&&b.grind!=null).map(b=>+b.grind).concat(db.beans.flatMap(b=>[b.start,...Object.values(b.starts||{})]).filter(v=>v!=null&&v!=='').map(Number));
   if(!g.length)return [0,40];
   return [Math.max(0,Math.floor(Math.min(...g)-6)),Math.ceil(Math.max(...g)+6)];
 }
@@ -601,7 +618,13 @@ function renderRank(){
 $('#v-rank').addEventListener('click',e=>{const b=e.target.closest('[data-bean]');if(b)openBean(b.dataset.bean)});
 
 /* ---------- Grafiken ---------- */
-function dial(value,settled,big){
+const METHOD_TAG={espresso:'ESPRESSO',v60:'V60',aeropress:'AEROPRESS',moka:'BIALETTI'};
+const METHOD_SUB={v60:'FILTER',moka:'MOKKA'};
+const methodColor=id=>METHOD_TAG[id]?`var(--m-${id})`:'var(--m-other)';
+function dialMeta(m,t){if(!m)return null;const tag=METHOD_TAG[m.id]||(m.name.length>10?m.name.slice(0,9)+'…':m.name).toUpperCase();
+  const sub=m.hasTypes?typeLabel(t||'double').toUpperCase():(METHOD_SUB[m.id]||(METHOD_TAG[m.id]?'':'MAHLGRAD'));
+  return {tag,sub,col:methodColor(m.id),label:`${m.name}${m.hasTypes?' '+typeLabel(t||'double'):''}`}}
+function dial(value,settled,big,meta){
   const [lo,hi]=grindRange(),cx=60,cy=60,r=46,A0=135,SW=270;
   const pos=v=>{const t=Math.min(Math.max((v-lo)/(hi-lo||1),0),1);const a=(A0+t*SW)*Math.PI/180;return [cx+r*Math.cos(a),cy+r*Math.sin(a),a]};
   let ticks='';const span=hi-lo;const every=span>30?5:span>14?2:1;
@@ -611,13 +634,15 @@ function dial(value,settled,big){
   const [mx,my]=has?pos(+value):[0,0];
   const [sx,sy]=pos(lo),[ex,ey]=pos(hi);
   const col=settled?'var(--teal)':'var(--fast)';
-  return `<svg class="dial${big?' big':''}" viewBox="-6 -6 132 132" role="img" aria-label="Mahlgrad ${has?fmt(value):'noch offen'}">
+  return `<svg class="dial${big?' big':''}" viewBox="-6 -6 132 132" role="img" aria-label="${meta?esc(meta.label)+': ':''}Mahlgrad ${has?fmt(value):'noch offen'}">
     <circle cx="60" cy="60" r="${r-4}" fill="var(--accent-soft)"/>
+    ${meta?`<circle cx="60" cy="60" r="${r-8}" fill="none" stroke="${meta.col}" stroke-width="1.6" opacity=".55"/>`:''}
     <path d="M${sx.toFixed(1)} ${sy.toFixed(1)}A${r} ${r} 0 1 1 ${ex.toFixed(1)} ${ey.toFixed(1)}" fill="none" stroke="var(--line)" stroke-width="5" stroke-linecap="round"/>
     ${ticks}
     ${has?`<path d="M${sx.toFixed(1)} ${sy.toFixed(1)}A${r} ${r} 0 ${((+value-lo)/(hi-lo||1))*SW>180?1:0} 1 ${mx.toFixed(1)} ${my.toFixed(1)}" fill="none" stroke="${col}" stroke-width="5" stroke-linecap="round"/><circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="7" fill="var(--surface)" stroke="${col}" stroke-width="3.5"/>`:''}
-    <text x="60" y="${has?66:64}" text-anchor="middle" style="font-size:${has?(String(fmt(value)).length>3?24:30):16}px;font-weight:700;fill:var(--accent)">${has?fmt(value):'neu'}</text>
-    <text x="60" y="84" text-anchor="middle" style="font-size:8.5px;letter-spacing:.08em;fill:var(--muted)">MAHLGRAD</text>
+    ${meta?`<text x="60" y="45" text-anchor="middle" style="font-family:var(--font-body);font-size:9.5px;font-weight:800;letter-spacing:.04em;fill:${meta.col}">${esc(meta.tag)}</text>`:''}
+    <text x="60" y="${has?(meta?71:66):(meta?69:64)}" text-anchor="middle" style="font-size:${has?(String(fmt(value)).length>3?24:30):16}px;font-weight:700;fill:var(--accent)">${has?fmt(value):'neu'}</text>
+    <text x="60" y="${meta?87:84}" text-anchor="middle" style="${meta?'font-family:var(--font-body);font-size:8.5px;font-weight:700;letter-spacing:.04em;fill:'+meta.col:'font-size:8.5px;letter-spacing:.08em;fill:var(--muted)'}">${meta?esc(meta.sub):'MAHLGRAD'}</text>
   </svg>`;
 }
 function gauge(t,m){
@@ -670,6 +695,31 @@ function caffeine(b){ // grobe Schätzung in mg
   const m=methodOf(b.methodId);if(b.methodId==='espresso'||m?.hasTypes)return b.type==='single'?65:125;
   return Math.round((m?.dose||15)*8);
 }
+const QUOTES=[
+  'Ein Tag ohne Kaffee ist wie … keine Ahnung, hatte ich noch nie.',
+  'Erst Kaffee. Dann die Welt.',
+  'Ich trinke Kaffee, damit ich Dinge schneller falsch machen kann.',
+  'Meine Blutgruppe? Espresso, doppelt.',
+  'Kaffee ist die Antwort. Die Frage ist egal.',
+  'Ich bin nicht süchtig. Ich bin nur sehr engagiert.',
+  'Entkoffeiniert ist wie ein Kuss von der eigenen Schwester.',
+  'Vor dem ersten Kaffee bin ich nur ein Gerücht.',
+  'Das Leben ist zu kurz für schlechten Kaffee und zu lang ohne.',
+  'Ich brauche keine Therapie. Ich brauche einen Zweikreiser.',
+  'Laut Statistik ist Kaffee das zweitbeliebteste Getränk nach Wasser. Ich arbeite dran.',
+  'Wenn das Leben dir Zitronen gibt: tausch sie gegen Bohnen.',
+  'Espresso: weil Schlaf eh überbewertet ist.',
+  'Mein Siebträger hat mir noch nie widersprochen.',
+  'Ohne Kaffee bin ich nur schlechte Laune in Hausschuhen.',
+  'Barista ist nur ein anderes Wort für Chemiker mit Milchschaum.',
+  'Ich lebe irgendwo zwischen „zu wenig Kaffee“ und „zu viel Kaffee“.',
+  'Montag ist kein Wochentag, Montag ist ein Kaffee-Notfall.',
+  'Wer früher aufsteht, hat mehr Zeit für Kaffee. Das ist der einzige Grund.',
+  'Mahlgrad 18 ist kein Fehler. Es ist eine Lebenseinstellung.',
+  'Sei wie Kaffee: stark, heiß und schwer zu ignorieren.',
+  'Ich habe heute schon so viel Kaffee getrunken, ich kann Geräusche sehen.',
+  'Gute Ideen entstehen beim zweiten Kaffee. Beim ersten entsteht nur Bewusstsein.',
+  'Kaffee fragt nicht. Kaffee versteht.'];
 const TIPS=[
   'Frisch gemahlen ist das halbe Spiel: Bohnen erst direkt vor dem Bezug mahlen.',
   'Espresso-Bohnen schmecken meist 7 bis 30 Tage nach der Röstung am besten.',
@@ -699,6 +749,7 @@ function renderHome(){
     <div class="hero"><svg class="beanart" aria-hidden="true"><use href="#bean"/></svg>
       <div class="eyebrow">Letzter Kaffee</div><div class="since">${esc(s.big)}</div><div class="quip">${esc(s.quip)}</div>
       <div class="acts"><button class="solid" data-act="quick" data-who="me">+ Für mich</button><button data-act="quick" data-who="both">+ Für uns beide</button></div></div>
+    <div class="quote"><p>${esc(QUOTES[Math.floor((Date.now()-new Date().getTimezoneOffset()*6e4)/DAY)%QUOTES.length])}</p><span>Kaffeespruch des Tages</span></div>
     <div class="itiles">
       ${tile('save',ICONS.piggy,eur0(x.saved),'gespart')}
       ${tile('rank',ICONS.trophy,fav?esc(fav.b.name):'–','Favorit',' data-wide="1"')}
@@ -883,14 +934,14 @@ function showResult(b,a){
 /* ---------- Meine Sorten ---------- */
 const verdict=mk=>mk.settled?'<span class="verdict ok">✓ Sitzt. So lassen.</span>':`<span class="verdict try">Nächster Versuch, zuletzt ${fmt(mk.last.grind)}</span>`;
 function beanCard(b){
-  const mks=markers(b.id),mk=mks[0];
-  const val=mk?mk.value:(b.start!=null&&b.start!==''?+b.start:null);
+  const mvs=methodValues(b),top=mvs[0],mk=top?.mk||null;
+  const val=top?top.v:null;
   return `<button class="card bean" data-bean="${b.id}">
-    ${dial(val,mk?mk.settled:false)}
-    <div style="min-width:0"><h3>${esc(b.name)}</h3><div class="small muted">${mk?`${esc(mk.method.name)}${mk.t?' '+typeLabel(mk.t):''}`:'Noch kein Bezug'}${b.roaster?' · '+esc(b.roaster):''}</div></div>
-    <div class="stack" style="gap:8px;min-width:0">${mk?verdict(mk):'<span class="small muted">Start-Mahlgrad</span>'}
+    ${dial(val,mk?mk.settled:false,false,top?dialMeta(top.m,mk?.t):null)}
+    <div style="min-width:0"><h3>${esc(b.name)}</h3><div class="small muted">${top?esc(top.m.name):'Noch kein Mahlgrad'}${b.roaster?' · '+esc(b.roaster):''}</div></div>
+    <div class="stack" style="gap:8px;min-width:0">${mk?verdict(mk):top?'<span class="small muted">Start-Mahlgrad</span>':''}
       ${b.notes?.length?`<div class="notes">${b.notes.map(n=>`<span class="note">${esc(n)}</span>`).join('')}</div>`:''}
-      ${mks.length>1?`<div class="others">${mks.slice(1).map(o=>`<span>${esc(o.method.name)}${o.t?' '+typeLabel(o.t):''}: ${fmt(o.value)}</span>`).join('')}</div>`:''}</div>
+      ${mvs.length>1?`<div class="others">${mvs.slice(1).map(o=>`<span>${esc(o.m.name)} ${fmt(o.v)}</span>`).join('')}</div>`:''}</div>
   </button>`;
 }
 function renderBeans(){
@@ -903,11 +954,21 @@ function renderBeans(){
 }
 $('#bean-list').addEventListener('click',e=>{const b=e.target.closest('[data-bean]');if(b)openBean(b.dataset.bean)});
 let editing=null,formNotes=[];
-function renderNoteChips(){$('#b-notes').innerHTML=NOTES.map(n=>`<button type="button" data-n="${n}" aria-pressed="${formNotes.includes(n)}">${n}</button>`).join('')}
+function allNotes(){return [...new Set([...NOTES,...(db.customNotes||[]),...db.beans.flatMap(b=>b.notes||[]),...formNotes])]}
+function renderNoteChips(){$('#b-notes').innerHTML=allNotes().map(n=>`<button type="button" data-n="${n}" aria-pressed="${formNotes.includes(n)}">${n}</button>`).join('')}
+$('#b-note-add').addEventListener('click',addNote);
+$('#b-note-new').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addNote()}});
+function addNote(){const v=$('#b-note-new').value.trim();if(!v)return;const n=v.charAt(0).toUpperCase()+v.slice(1);db.customNotes=[...new Set([...(db.customNotes||[]),n])];if(!formNotes.includes(n))formNotes.push(n);$('#b-note-new').value='';save();renderNoteChips()}
+function renderRoasters(){const r=[...new Set(db.beans.map(b=>(b.roaster||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'de'));
+  $('#roaster-list').innerHTML=r.map(x=>`<option value="${esc(x)}"></option>`).join('');
+  $('#b-roasters').innerHTML=r.map(x=>`<button type="button" data-r="${esc(x)}" aria-pressed="${$('#b-roaster').value.trim()===x}">${esc(x)}</button>`).join('');$('#b-roasters').hidden=!r.length}
+$('#b-roasters').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$('#b-roaster').value=b.dataset.r;renderRoasters()});
+$('#b-roaster').addEventListener('input',renderRoasters);
+function renderStarts(bean){$('#b-starts').innerHTML=db.methods.map(m=>{const v=bean?startOf(bean,m.id):null;return `<label for="b-start-${m.id}">${esc(m.name)}<input id="b-start-${m.id}" type="number" inputmode="decimal" step="any" placeholder="z. B. ${m.id==='espresso'?18:22}" value="${v??''}"></label>`}).join('')}
 $('#b-notes').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const n=b.dataset.n;formNotes=formNotes.includes(n)?formNotes.filter(x=>x!==n):[...formNotes,n];renderNoteChips()});
 function openBeanForm(bean){
   editing=bean?bean.id:null;$('#bean-form-title').textContent=bean?'Sorte bearbeiten':'Neue Sorte';
-  $('#b-name').value=bean?bean.name:'';$('#b-roaster').value=bean?bean.roaster:'';$('#b-date').value=bean?bean.roastDate:'';$('#b-start').value=bean&&bean.start!=null?bean.start:'';$('#b-active').checked=bean?!!bean.active:true;
+  $('#b-name').value=bean?bean.name:'';$('#b-roaster').value=bean?bean.roaster:'';$('#b-date').value=bean?bean.roastDate:'';renderStarts(bean);renderRoasters();$('#b-active').checked=bean?!!bean.active:true;
   formNotes=bean?.notes?[...bean.notes]:[];renderNoteChips();
   go('beans');$('#bean-form').hidden=false;$('#b-name').focus();
 }
@@ -915,19 +976,23 @@ $('#bean-add-btn').addEventListener('click',()=>openBeanForm(null));
 $('#bean-cancel').addEventListener('click',()=>{$('#bean-form').hidden=true});
 $('#bean-form').addEventListener('submit',e=>{
   e.preventDefault();const name=$('#b-name').value.trim();if(!name){$('#b-name').focus();return}
-  const st=$('#b-start').value.replace(',','.');
-  const data={name,roaster:$('#b-roaster').value.trim(),roastDate:$('#b-date').value,start:st===''?null:+st,active:$('#b-active').checked,notes:[...formNotes]};
-  if(editing)Object.assign(db.beans.find(b=>b.id===editing),data);else{const id=uid();db.beans.push({id,...data});db.last={...db.last,bean:id}}
+  const starts={};db.methods.forEach(m=>{const v=$(`#b-start-${m.id}`)?.value.replace(',','.');if(v!=null&&v!=='')starts[m.id]=+v});
+  const data={name,roaster:$('#b-roaster').value.trim(),roastDate:$('#b-date').value,starts,start:starts.espresso??null,active:$('#b-active').checked,notes:[...formNotes]};
+  if(editing)Object.assign(db.beans.find(b=>b.id===editing),data);else{const id=uid();db.beans.push({id,...data});db.last={...db.last,bean:id};if(data.active)shareSel.add(id)}
   save();$('#bean-form').hidden=true;renderBeans();renderLog();toast(editing?'Sorte gespeichert':'Sorte angelegt');
 });
 
 /* ---------- Sorte im Detail ---------- */
-let currentBean=null,confirmDel=false;
-function openBean(id){currentBean=id;confirmDel=false;renderBean();show('bean')}
+let currentBean=null,confirmDel=false,dMethod=null,dType=null;
+function openBean(id){currentBean=id;confirmDel=false;const b=db.beans.find(x=>x.id===id);const top=b?methodValues(b)[0]:null;dMethod=top?top.m.id:db.methods[0]?.id;dType=top?.mk?.t||null;renderBean();show('bean')}
 function renderBean(){
   const b=db.beans.find(x=>x.id===currentBean);if(!b){show('beans');return}
-  const l=brewsOf(b.id),rev=[...l].reverse(),mks=markers(b.id),mk=mks[0];
-  const val=mk?mk.value:(b.start!=null&&b.start!==''?+b.start:null);
+  if(!methodOf(dMethod))dMethod=db.methods[0]?.id;
+  const M=methodOf(dMethod);if(M.hasTypes){if(!dType){const lt=brewsOf(b.id,M.id);dType=lt.length?lt[lt.length-1].type||'double':'double'}}else dType=null;
+  const all=brewsOf(b.id),l=brewsOf(b.id,M.id),rev=[...l].reverse(),mks=markers(b.id).filter(x=>x.m===M.id);
+  const mk=mks.find(x=>x.t===dType)||null;
+  const val=mk?mk.value:(()=>{const g=nextGrind(b.id,M.id,dType);return g})();
+  const used=new Set(all.map(x=>x.methodId));
   const age=b.roastDate?Math.floor((startOfDay(Date.now())-new Date(b.roastDate).setHours(0,0,0,0))/DAY):null;
   $('#v-bean').innerHTML=`
    <div class="row between"><button class="link" data-act="back">‹ Meine Sorten</button><button class="link" data-act="edit">Bearbeiten</button></div>
@@ -935,29 +1000,32 @@ function renderBean(){
      <div class="eyebrow">${esc(b.roaster||'Kaffeesorte')}${age!=null?` · ${age} Tage nach Röstung`:''}</div>
      <h1>${esc(b.name)}</h1>
      ${b.notes?.length?`<div class="notes" style="justify-content:center">${b.notes.map(n=>`<span class="note">${esc(n)}</span>`).join('')}</div>`:''}
-     ${dial(val,mk?mk.settled:false,true)}
-     <div>${mk?`<div class="small muted">Dein Mahlgrad für ${esc(mk.method.name)}${mk.t?' '+typeLabel(mk.t):''}</div>${verdict(mk)}`:'<span class="small muted">Noch kein Bezug. Das ist der Start-Mahlgrad.</span>'}</div>
-     ${mks.length>1?`<div class="others" style="justify-content:center">${mks.slice(1).map(o=>`<span>${esc(o.method.name)}${o.t?' '+typeLabel(o.t):''}: ${fmt(o.value)}</span>`).join('')}</div>`:''}
+     <div class="chips" style="max-width:100%;justify-content:flex-start" data-dm>${db.methods.map(m=>`<button type="button" data-dm="${m.id}" aria-pressed="${m.id===M.id}">${esc(m.name)}${used.has(m.id)?' ●':''}</button>`).join('')}</div>
+     ${M.hasTypes?`<div class="seg" style="width:100%;max-width:300px" data-dt><button type="button" data-dt="single" aria-pressed="${dType==='single'}">Single</button><button type="button" data-dt="double" aria-pressed="${dType==='double'}">Double</button></div>`:''}
+     ${dial(val,mk?mk.settled:false,true,dialMeta(M,dType))}
+     <div>${mk?`<div class="small muted">Dein Mahlgrad für ${esc(M.name)}${dType?' '+typeLabel(dType):''}</div>${verdict(mk)}`:val!=null?`<span class="small muted">Start-Mahlgrad für ${esc(M.name)}. Noch kein Bezug damit.</span>`:`<span class="small muted">Für ${esc(M.name)} gibt es noch keinen Mahlgrad. Trag unter „Bearbeiten“ einen Start-Mahlgrad ein oder mach den ersten Bezug.</span>`}</div>
      ${(()=>{const sc=beanScore(b.id);if(!sc)return '<span class="small muted">Noch nicht bewertet</span>';const pos=ranking().findIndex(x=>x.b.id===b.id)+1;return `<div><span class="score" style="font-size:1.6rem">${fmt(sc.avg)}</span><span class="small muted"> / 10 · Platz ${pos} in der Rangliste</span></div>`})()}
      <label class="check" for="d-active"><input id="d-active" type="checkbox" ${b.active?'checked':''}>Gerade zu Hause</label>
-     <button class="primary" data-act="brew" style="align-self:stretch">Mit dieser Sorte einen Kaffee eintragen</button>
+     <button class="primary" data-act="brew" style="align-self:stretch">${esc(M.name)} mit dieser Sorte eintragen</button>
    </div>
-   ${rev.length?`<details class="card more"><summary>Verlauf ansehen (${rev.length} ${rev.length===1?'Bezug':'Bezüge'})</summary>
+   ${rev.length?`<details class="card more"><summary>Verlauf mit ${esc(M.name)} ansehen (${rev.length} ${rev.length===1?'Bezug':'Bezüge'})</summary>
      <div class="stack" style="margin-top:12px">${mks.filter(x=>x.method.mode==='time').map(x=>`<div><div class="small muted">${esc(x.method.name)}${x.t?' '+typeLabel(x.t):''}: Durchlaufzeit, grün = Zielbereich</div>${spark(x.list,x.method)}</div>`).join('')}
      <div class="shots">${rev.map(s=>{const m=methodOf(s.methodId),a=analyse(s,null);return `<button class="shot" data-edit="${s.id}">
        <div><div class="small muted">${new Date(s.ts).toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'short'})} · ${esc(m?m.name:'')}${s.type?' '+typeLabel(s.type):''}${s.taste?' · '+(s.taste==='gut'?'lecker':s.taste):''}</div>
        <div class="vals">Mahlgrad ${fmt(s.grind)} · ${fmtT(s.time)} · ${fmt(s.yield)} g${s.rating?` · ★ ${s.rating}/10`:''}</div>${s.note?`<div class="small muted">${esc(s.note)}</div>`:''}</div>
        <div>${tastePill(m,a.status)}</div></button>`}).join('')}</div>
      <p class="small muted" style="margin:0">Einen Eintrag antippen, um ihn zu bearbeiten oder zu löschen.</p></div></details>`:''}
-   <div class="card stack"><h3>Sorte löschen</h3>${confirmDel?`<div class="confirm"><span class="small">Sorte und alle ${l.length} Bezüge löschen?</span><button class="danger" data-act="delbean">Ja, löschen</button><button data-act="nodel">Abbrechen</button></div>`:'<button class="danger" data-act="askbean" style="align-self:flex-start">Sorte löschen</button>'}</div>`;
+   <div class="card stack"><h3>Sorte löschen</h3>${confirmDel?`<div class="confirm"><span class="small">Sorte und alle ${all.length} Bezüge löschen?</span><button class="danger" data-act="delbean">Ja, löschen</button><button data-act="nodel">Abbrechen</button></div>`:'<button class="danger" data-act="askbean" style="align-self:flex-start">Sorte löschen</button>'}</div>`;
 }
 $('#v-bean').addEventListener('change',e=>{if(e.target.id==='d-active'){db.beans.find(b=>b.id===currentBean).active=e.target.checked;save();renderLog();toast(e.target.checked?'Als „zu Hause“ markiert':'Nicht mehr zu Hause')}});
 $('#v-bean').addEventListener('click',e=>{
   const t=e.target.closest('button');if(!t)return;const act=t.dataset.act;
   if(t.dataset.edit)openEdit(t.dataset.edit);
+  else if(t.dataset.dm){dMethod=t.dataset.dm;dType=null;renderBean()}
+  else if(t.dataset.dt){dType=t.dataset.dt;renderBean()}
   else if(act==='back')go('beans');
   else if(act==='edit')openBeanForm(db.beans.find(b=>b.id===currentBean));
-  else if(act==='brew'){db.last={...db.last,bean:currentBean};const mk=markers(currentBean)[0];if(mk){db.last.method=mk.m;if(mk.t)db.last.type=mk.t;form.method=mk.m}go('log')}
+  else if(act==='brew'){db.last={...db.last,bean:currentBean,method:dMethod};if(dType)db.last.type=dType;form.method=dMethod;go('log')}
   else if(act==='nodel'){confirmDel=false;renderBean()}
   else if(act==='askbean'){confirmDel=true;renderBean()}
   else if(act==='delbean'){db.beans=db.beans.filter(b=>b.id!==currentBean);db.brews=db.brews.filter(s=>s.beanId!==currentBean);save();renderLog();go('beans');toast('Sorte gelöscht')}
@@ -1021,6 +1089,50 @@ $('#dl-btn').addEventListener('click',()=>{try{const a=document.createElement('a
 $('#reset-btn').addEventListener('click',()=>{$('#reset-confirm').hidden=false;$('#reset-btn').hidden=true});
 $('#reset-no').addEventListener('click',()=>{$('#reset-confirm').hidden=true;$('#reset-btn').hidden=false});
 $('#reset-yes').addEventListener('click',()=>{db={v:2,owner:db.owner,partner:db.partner,methods:PRESETS.map(p=>({...p})),beans:[],brews:[],demo:false,last:{}};save();$('#reset-confirm').hidden=true;$('#reset-btn').hidden=false;$('#result').innerHTML='';renderAll();go('home');toast('Alles zurückgesetzt. Viel Spaß mit dem ersten Kaffee!')});
+/* ---------- Sorten teilen ---------- */
+const SHARE_TAG='ROASTBOOK-SORTEN:';
+const shareSel=new Set();let shareInit=false,sharePending=null;
+function renderShare(){
+  if(!shareInit){db.beans.filter(b=>b.active).forEach(b=>shareSel.add(b.id));shareInit=true}
+  const list=[...db.beans].sort((a,b)=>(b.active?1:0)-(a.active?1:0));
+  $('#share-list').innerHTML=list.length?list.map(b=>`<label class="check" for="sh-${b.id}"><input id="sh-${b.id}" type="checkbox" data-sh="${b.id}" ${shareSel.has(b.id)?'checked':''}>${esc(b.name)}${b.roaster?` <span class="small muted">· ${esc(b.roaster)}</span>`:''}</label>`).join(''):'<span class="small muted">Noch keine Sorten angelegt.</span>';
+  $('#share-btn').hidden=!list.length;
+}
+$('#share-list').addEventListener('change',e=>{const id=e.target.dataset.sh;if(!id)return;e.target.checked?shareSel.add(id):shareSel.delete(id)});
+const b64e=t=>btoa(unescape(encodeURIComponent(t))),b64d=t=>decodeURIComponent(escape(atob(t)));
+function sharePayload(){
+  const beans=db.beans.filter(b=>shareSel.has(b.id)).map(b=>{const starts={};methodValues(b).forEach(x=>{starts[x.m.id]=x.v});
+    return {name:b.name,roaster:b.roaster||'',roastDate:b.roastDate||'',notes:b.notes||[],active:!!b.active,starts}});
+  const ids=new Set(beans.flatMap(b=>Object.keys(b.starts)));
+  const methods=db.methods.filter(m=>ids.has(m.id)&&!PRESETS.some(p=>p.id===m.id));
+  return {v:1,beans,methods,notes:db.customNotes||[]};
+}
+$('#share-btn').addEventListener('click',async()=>{
+  const d=sharePayload();if(!d.beans.length){toast('Wähle mindestens eine Sorte aus.');return}
+  const txt=`☕ ${d.beans.length===1?'Eine Kaffeesorte':d.beans.length+' Kaffeesorten'} für dein Roastbook: ${d.beans.map(b=>b.name).join(', ')}.\nKopiere diese ganze Nachricht, öffne das Roastbook und füge sie unter Einstellungen › Sorten teilen › „Sorten übernehmen“ ein.\n\n${SHARE_TAG}${b64e(JSON.stringify(d))}`;
+  if(navigator.share&&window.self===window.top){try{await navigator.share({text:txt});return}catch(e){if(e&&e.name==='AbortError')return}}
+  try{await navigator.clipboard.writeText(txt);toast('Kopiert. Jetzt z. B. per WhatsApp schicken.')}catch(e){$('#share-in').value=txt;$('#share-in').select();toast('Text unten markiert, bitte selbst kopieren')}
+});
+const normKey=(n,r)=>(n+'|'+(r||'')).trim().toLowerCase();
+$('#share-take').addEventListener('click',()=>{
+  const raw=$('#share-in').value,i=raw.indexOf(SHARE_TAG);
+  try{if(i<0)throw 0;const d=JSON.parse(b64d(raw.slice(i+SHARE_TAG.length).replace(/[^A-Za-z0-9+/=]/g,'')));if(!Array.isArray(d.beans)||!d.beans.length)throw 0;
+    sharePending=d;const keys=new Set(db.demo?[]:db.beans.map(b=>normKey(b.name,b.roaster)));const upd=d.beans.filter(b=>keys.has(normKey(b.name,b.roaster))).length,neu=d.beans.length-upd;
+    $('#share-sum').textContent=[neu?`${neu} neue Sorte${neu>1?'n':''}`:'',upd?`${upd} aktualisieren`:''].filter(Boolean).join(', ')+(db.demo?'. Die Beispieldaten werden dabei gelöscht.':'.')+' Übernehmen?';
+    $('#share-confirm').hidden=false}
+  catch(e){sharePending=null;$('#share-confirm').hidden=true;toast('Darin habe ich keine geteilten Sorten gefunden.')}
+});
+$('#share-no').addEventListener('click',()=>{sharePending=null;$('#share-confirm').hidden=true});
+$('#share-yes').addEventListener('click',()=>{const d=sharePending;if(!d)return;
+  if(db.demo)db={v:2,owner:db.owner,partner:db.partner,methods:PRESETS.map(p=>({...p})),beans:[],brews:[],demo:false,last:{}};
+  (d.methods||[]).forEach(m=>{if(m&&m.id&&!methodOf(m.id))db.methods.push({...m})});
+  db.customNotes=[...new Set([...(db.customNotes||[]),...(d.notes||[])])];
+  d.beans.forEach(x=>{const starts={};Object.entries(x.starts||{}).forEach(([k,v])=>{if(methodOf(k)&&v!=null&&!isNaN(v))starts[k]=+v});
+    const ex=db.beans.find(b=>normKey(b.name,b.roaster)===normKey(x.name,x.roaster));
+    if(ex){ex.starts={...(ex.starts||{}),...starts};ex.start=ex.starts.espresso??ex.start??null;ex.notes=[...new Set([...(ex.notes||[]),...(x.notes||[])])];if(x.roastDate)ex.roastDate=x.roastDate;ex.active=ex.active||x.active}
+    else db.beans.push({id:uid(),name:String(x.name||'Kaffee'),roaster:x.roaster||'',roastDate:x.roastDate||'',notes:x.notes||[],active:x.active!==false,starts,start:starts.espresso??null})});
+  sharePending=null;$('#share-confirm').hidden=true;$('#share-in').value='';save();renderAll();$('#result').innerHTML='';toast(`${d.beans.length===1?'Sorte':'Sorten'} übernommen`);
+});
 let pending=null;
 function stage(txt){try{const d=JSON.parse(txt);if(Array.isArray(d.shots)&&!d.brews){pending=migrate(d)}else{if(!Array.isArray(d.beans)||!Array.isArray(d.brews))throw 0;pending=d}$('#imp-confirm').hidden=false}catch(e){toast('Das ist keine gültige Sicherung.')}}
 $('#imp-btn').addEventListener('click',()=>stage($('#io-text').value));
@@ -1036,7 +1148,7 @@ function show(v){
   document.querySelectorAll('.nav button').forEach(b=>b.dataset.tab===tab?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));
   window.scrollTo(0,0);closeDrawer();
 }
-function go(t){if(t==='home')renderHome();if(t==='beans'){renderBeans();$('#bean-form').hidden=true}if(t==='settings')renderSettings();if(t==='log')renderLog();if(t==='rank')renderRank();if(t==='save')renderSave();if(t==='tools')renderTools();show(t)}
+function go(t){if(t==='home')renderHome();if(t==='beans'){renderBeans();$('#bean-form').hidden=true}if(t==='settings'){renderSettings();renderShare()}if(t==='log')renderLog();if(t==='rank')renderRank();if(t==='save')renderSave();if(t==='tools')renderTools();show(t)}
 function refresh(){if(view==='home')renderHome();else if(view==='tools')renderTools();else if(view==='bean')renderBean();else if(view==='beans')renderBeans();else if(view==='rank')renderRank();else if(view==='save')renderSaveOut();renderLog()}
 function openDrawer(){$('#drawer').classList.add('open');$('#scrim').hidden=false;$('#menu-btn').setAttribute('aria-expanded','true')}
 function closeDrawer(){$('#drawer').classList.remove('open');$('#scrim').hidden=true;$('#menu-btn').setAttribute('aria-expanded','false')}
@@ -1048,13 +1160,14 @@ let tt,undoFn=null;
 function toast(m,undo){const t=$('#toast');$('#toast-msg').textContent=m;undoFn=undo||null;$('#toast-undo').hidden=!undo;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>{t.hidden=true;undoFn=null},undo?5000:2600)}
 $('#toast-undo').addEventListener('click',()=>{if(undoFn){undoFn();undoFn=null;$('#toast').hidden=true;toast('Rückgängig gemacht')}});
 function applyName(){const n=appName();document.querySelectorAll('.appname').forEach(el=>el.textContent=n);document.title=n}
-function renderAll(){applyName();renderHome();renderTools();renderLog();renderBeans();renderRank();renderSettings()}
+function renderAll(){applyName();renderHome();renderTools();renderLog();renderBeans();renderRank();renderSettings();renderShare()}
 db=load();if(db.owner===undefined){db.owner='Marius';save()}if(db.partner===undefined){db.partner='Barb';save()}
 try{if(window.self!==window.top)$('#dl-btn').hidden=true}catch(e){$('#dl-btn').hidden=true}
 renderAll();show('home');
 setInterval(()=>{if(view==='home'&&$('#sheet').hidden)renderHome()},60000);
 })();
 </script>
+
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}</script>
 </body>
