@@ -121,7 +121,9 @@ textarea{min-height:110px;font-family:var(--font-num);font-size:12px}
 .why{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:.93rem}
 /* Sorten */
 .bean{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;text-align:left;width:100%;font-weight:400;align-items:center}
-.bean .dial{grid-row:span 2}
+.bean{cursor:pointer}
+.bean .dialbtn{grid-row:span 2;padding:0;border:none;background:none;border-radius:50%}
+.bean .dialbtn:active{transform:scale(.96)}
 .dial{width:112px;height:112px;display:block}
 .dial.big{width:168px;height:168px;margin:0 auto}
 .dial text{font-family:var(--font-num)}
@@ -294,6 +296,7 @@ details.method form{padding:0 16px 16px}
       <!-- COFFEES -->
       <section id="v-beans" class="stack" hidden>
         <header class="row between"><div><div class="eyebrow">Your grind at a glance</div><h1>My coffees</h1></div><button id="bean-add-btn">+ Coffee</button></header>
+        <p class="small muted" style="margin:-6px 0 0">Tap a dial to switch between brew methods.</p>
         <form id="bean-form" class="card stack" hidden novalidate>
           <h2 id="bean-form-title">New coffee</h2>
           <label for="b-name">Name<input id="b-name" type="text" placeholder="e.g. Brazil Santos"></label>
@@ -534,7 +537,7 @@ function nextGrind(beanId,methodId,type){
   return startOf(bean,methodId,type);
 }
 /* Starting grind; methods with single/double keep one per shot type ("espresso:single") */
-function startOf(bean,methodId,type){if(!bean)return null;if(type){const t=bean.starts?.[`${methodId}:${type}`];if(t!=null&&t!=='')return +t}const v=bean.starts?.[methodId];if(v!=null&&v!=='')return +v;return methodId==='espresso'&&bean.start!=null&&bean.start!==''?+bean.start:null}
+function startOf(bean,methodId,type){if(!bean)return null;if(type){const t=bean.starts?.[`${methodId}:${type}`];if(t!=null&&t!=='')return +t;if(type==='single')return null}const v=bean.starts?.[methodId];if(v!=null&&v!=='')return +v;return methodId==='espresso'&&bean.start!=null&&bean.start!==''?+bean.start:null}
 /* Alle Zubereitungen einer Sorte mit ihrem aktuellen Mahlgrad */
 function methodValues(bean){const mks=markers(bean.id);return db.methods.map(m=>{const mk=mks.find(x=>x.m===m.id);
   const t=mk?mk.t:m.hasTypes?(startOf(bean,m.id,'double')!=null||startOf(bean,m.id,'single')==null?'double':'single'):null;
@@ -671,7 +674,7 @@ function dial(value,settled,big,meta){
     ${ticks}
     ${has?`<path d="M${sx.toFixed(1)} ${sy.toFixed(1)}A${r} ${r} 0 ${((+value-lo)/(hi-lo||1))*SW>180?1:0} 1 ${mx.toFixed(1)} ${my.toFixed(1)}" fill="none" stroke="${col}" stroke-width="5" stroke-linecap="round"/><circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="7" fill="var(--surface)" stroke="${col}" stroke-width="3.5"/>`:''}
     ${meta?`<text x="60" y="45" text-anchor="middle" style="font-family:var(--font-body);font-size:9.5px;font-weight:800;letter-spacing:.04em;fill:${meta.col}">${esc(meta.tag)}</text>`:''}
-    <text x="60" y="${has?(meta?71:66):(meta?69:64)}" text-anchor="middle" style="font-size:${has?(String(fmt(value)).length>3?24:30):16}px;font-weight:700;fill:var(--accent)">${has?fmt(value):'new'}</text>
+    <text x="60" y="${has?(meta?71:66):(meta?69:64)}" text-anchor="middle" style="font-size:${has?(String(fmt(value)).length>3?24:30):16}px;font-weight:700;fill:var(--accent)">${has?fmt(value):'–'}</text>
     <text x="60" y="${meta?87:84}" text-anchor="middle" style="${meta?'font-family:var(--font-body);font-size:8.5px;font-weight:700;letter-spacing:.04em;fill:'+meta.col:'font-size:8.5px;letter-spacing:.08em;fill:var(--muted)'}">${meta?esc(meta.sub):'GRIND'}</text>
   </svg>`;
 }
@@ -963,16 +966,20 @@ function showResult(b,a){
 
 /* ---------- Meine Sorten ---------- */
 const verdict=mk=>mk.settled?'<span class="verdict ok">✓ Dialled in. Keep it.</span>':`<span class="verdict try">Next try, last was ${fmt(mk.last.grind)}</span>`;
+/* Every method (and shot type) a coffee can be brewed with; tapping the dial on the card steps through them */
+function beanOptions(bean){const mks=markers(bean.id);return db.methods.flatMap(m=>(m.hasTypes?['single','double']:[null]).map(t=>{
+  const mk=mks.find(x=>x.m===m.id&&(x.t||null)===t)||null;const v=mk?mk.value:startOf(bean,m.id,t);return {m,t,mk,v,count:mk?mk.count:0}}))}
+function defaultOption(opts){let best=0;opts.forEach((o,i)=>{if(o.count>opts[best].count)best=i});if(opts[best]?.count)return best;const i=opts.findIndex(o=>o.v!=null);return i<0?0:i}
+const cardSel={};
+function cardOption(bean){const opts=beanOptions(bean);let i=cardSel[bean.id];if(i==null||i>=opts.length)i=defaultOption(opts);return {opts,i,o:opts[i]}}
 function beanCard(b){
-  const mvs=methodValues(b),top=mvs[0],mk=top?.mk||null;
-  const val=top?top.v:null;
-  return `<button class="card bean" data-bean="${b.id}">
-    ${dial(val,mk?mk.settled:false,false,top?dialMeta(top.m,top.t):null)}
-    <div style="min-width:0"><h3>${esc(b.name)}</h3><div class="small muted">${top?esc(top.m.name):'No grind yet'}${b.roaster?' · '+esc(b.roaster):''}${b.process?' · '+esc(b.process):''}</div></div>
-    <div class="stack" style="gap:8px;min-width:0">${mk?verdict(mk):top?'<span class="small muted">Starting grind</span>':''}
-      ${b.notes?.length?`<div class="notes">${b.notes.map(n=>`<span class="note">${esc(n)}</span>`).join('')}</div>`:''}
-      ${mvs.length>1?`<div class="others">${mvs.slice(1).map(o=>`<span>${esc(o.m.name)} ${fmt(o.v)}</span>`).join('')}</div>`:''}</div>
-  </button>`;
+  const {opts,i,o}=cardOption(b),mk=o?.mk||null,label=o?`${o.m.name}${o.t?' '+typeLabel(o.t).toLowerCase():''}`:'';
+  return `<div class="card bean" data-bean="${b.id}" role="button" tabindex="0" aria-label="Open ${esc(b.name)}">
+    ${o?`<button type="button" class="dialbtn" data-cycle="${b.id}" aria-label="${esc(label)}, ${o.v!=null?'grind '+fmt(o.v):'no grind yet'}. Tap to show the next brew method (${i+1} of ${opts.length})">${dial(o.v,mk?mk.settled:false,false,dialMeta(o.m,o.t))}</button>`:dial(null,false)}
+    <div style="min-width:0"><h3>${esc(b.name)}</h3><div class="small muted">${esc(label)}${b.roaster?' · '+esc(b.roaster):''}${b.process?' · '+esc(b.process):''}</div></div>
+    <div class="stack" style="gap:8px;min-width:0">${mk?verdict(mk):o?.v!=null?'<span class="small muted">Starting grind</span>':'<span class="small muted">No grind yet</span>'}
+      ${b.notes?.length?`<div class="notes">${b.notes.map(n=>`<span class="note">${esc(n)}</span>`).join('')}</div>`:''}</div>
+  </div>`;
 }
 function renderBeans(){
   const list=$('#bean-list');
@@ -982,7 +989,12 @@ function renderBeans(){
   const act=sorted.filter(b=>b.active),old=sorted.filter(b=>!b.active);
   list.innerHTML=(act.length?`<div class="eyebrow">At home (${act.length})</div>${act.map(beanCard).join('')}`:'')+(old.length?`<div class="eyebrow" style="margin-top:8px">Finished (${old.length})</div>${old.map(beanCard).join('')}`:'');
 }
-$('#bean-list').addEventListener('click',e=>{const b=e.target.closest('[data-bean]');if(b)openBean(b.dataset.bean)});
+$('#bean-list').addEventListener('click',e=>{
+  const c=e.target.closest('[data-cycle]');
+  if(c){const id=c.dataset.cycle,bean=db.beans.find(x=>x.id===id),{opts,i}=cardOption(bean);cardSel[id]=(i+1)%opts.length;
+    const card=c.closest('.bean');card.outerHTML=beanCard(bean);$(`#bean-list [data-cycle="${id}"]`)?.focus();return}
+  const b=e.target.closest('[data-bean]');if(b)openBean(b.dataset.bean)});
+$('#bean-list').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('.bean[data-bean]')){e.preventDefault();openBean(e.target.dataset.bean)}});
 let editing=null,formNotes=[],formProcess='';
 const NEW_R='__new__';
 function roasterList(){return [...new Set(db.beans.map(b=>(b.roaster||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'de'))}
@@ -1027,7 +1039,7 @@ $('#bean-form').addEventListener('submit',e=>{
 
 /* ---------- Sorte im Detail ---------- */
 let currentBean=null,confirmDel=false,dMethod=null,dType=null;
-function openBean(id){currentBean=id;confirmDel=false;const b=db.beans.find(x=>x.id===id);const top=b?methodValues(b)[0]:null;dMethod=top?top.m.id:db.methods[0]?.id;dType=top?.t||null;renderBean();show('bean')}
+function openBean(id){currentBean=id;confirmDel=false;const b=db.beans.find(x=>x.id===id);const o=b?cardOption(b).o:null;dMethod=o?o.m.id:db.methods[0]?.id;dType=o?.t||null;renderBean();show('bean')}
 function renderBean(){
   const b=db.beans.find(x=>x.id===currentBean);if(!b){show('beans');return}
   if(!methodOf(dMethod))dMethod=db.methods[0]?.id;
