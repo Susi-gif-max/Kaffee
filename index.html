@@ -19,7 +19,7 @@
   --bg:#edf2f6; --surface:#ffffff; --ink:#0c1a2c; --muted:#56687c; --line:#d5dfe8;
   --accent:#0f3a6b; --accent-ink:#ffffff; --accent-soft:#dde7f3;
   --teal:#0a8f8c; --teal-soft:#d2efec;
-  --m-espresso:#0f3a6b; --m-v60:#0a8f8c; --m-aeropress:#6b4fb8; --m-moka:#b8456b; --m-other:#4a6a8a;
+  --m-espresso:#0f3a6b; --m-v60:#0a8f8c; --m-aeropress:#6b4fb8; --m-moka:#b8456b; --m-other:#4a6a8a; --sugg:#9a7b4f; --sugg-soft:#f3ebdf;
   --zone:#0a8f8c; --zone-soft:#d2efec; --slow:#c0503a; --slow-soft:#f7e0da; --fast:#b0761a; --fast-soft:#f6ead2;
   --hero-a:#0b2a55; --hero-b:#0b6f78; --hero-ink:#f2f8fb;
   --font-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
@@ -29,13 +29,13 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#08111d; --surface:#0f1c2e; --ink:#e4edf6; --muted:#8fa2b7; --line:#1e3048;
   --accent:#6aaaf5; --accent-ink:#06111e; --accent-soft:#16294a; --teal:#3cc9c0; --teal-soft:#10302f;
-  --m-espresso:#6aaaf5; --m-v60:#3cc9c0; --m-aeropress:#a993f0; --m-moka:#f08ab0; --m-other:#9fb4cc;
+  --m-espresso:#6aaaf5; --m-v60:#3cc9c0; --m-aeropress:#a993f0; --m-moka:#f08ab0; --m-other:#9fb4cc; --sugg:#d2b48c; --sugg-soft:#2c2416;
   --zone:#3cc9c0; --zone-soft:#10302f; --slow:#f08a74; --slow-soft:#3a1f1a; --fast:#e8b45a; --fast-soft:#33270f;
   --hero-a:#0d2a52; --hero-b:#0a5a63; --hero-ink:#eef6fa; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#08111d; --surface:#0f1c2e; --ink:#e4edf6; --muted:#8fa2b7; --line:#1e3048;
   --accent:#6aaaf5; --accent-ink:#06111e; --accent-soft:#16294a; --teal:#3cc9c0; --teal-soft:#10302f;
-  --m-espresso:#6aaaf5; --m-v60:#3cc9c0; --m-aeropress:#a993f0; --m-moka:#f08ab0; --m-other:#9fb4cc;
+  --m-espresso:#6aaaf5; --m-v60:#3cc9c0; --m-aeropress:#a993f0; --m-moka:#f08ab0; --m-other:#9fb4cc; --sugg:#d2b48c; --sugg-soft:#2c2416;
   --zone:#3cc9c0; --zone-soft:#10302f; --slow:#f08a74; --slow-soft:#3a1f1a; --fast:#e8b45a; --fast-soft:#33270f;
   --hero-a:#0d2a52; --hero-b:#0a5a63; --hero-ink:#eef6fa; color-scheme:dark}
 *{box-sizing:border-box}
@@ -122,6 +122,8 @@ textarea{min-height:110px;font-family:var(--font-num);font-size:12px}
 /* Sorten */
 .bean{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;text-align:left;width:100%;font-weight:400;align-items:center}
 .bean{cursor:pointer}
+.verdict.sugg{color:var(--sugg)}
+.suggest-hint{color:var(--sugg);font-weight:600}
 .bean .dialbtn{grid-row:span 2;padding:0;border:none;background:none;border-radius:50%}
 .bean .dialbtn:active{transform:scale(.96)}
 .dial{width:112px;height:112px;display:block}
@@ -270,7 +272,7 @@ details.method form{padding:0 16px 16px}
             <div class="seg" id="f-type"><button type="button" data-v="single">Single shot</button><button type="button" data-v="double">Double shot</button></div>
           </div>
           <div class="grid2">
-            <label for="f-grind">Grind setting<input id="f-grind" type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. 18,5"></label>
+            <label for="f-grind">Grind setting <span id="f-grind-hint" class="hint suggest-hint"></span><input id="f-grind" type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. 18,5"></label>
             <label for="f-yield"><span id="f-yield-label">Yield in the cup (g)</span><input id="f-yield" type="text" inputmode="decimal" autocomplete="off" placeholder="50"></label>
           </div>
           <label for="f-time">Brew time in seconds <span id="f-time-hint" class="hint"></span>
@@ -297,6 +299,7 @@ details.method form{padding:0 16px 16px}
       <section id="v-beans" class="stack" hidden>
         <header class="row between"><div><div class="eyebrow">Your grind at a glance</div><h1>My coffees</h1></div><button id="bean-add-btn">+ Coffee</button></header>
         <p class="small muted" style="margin:-6px 0 0">Tap a dial to switch between brew methods.</p>
+        <div class="chips" id="roaster-filter" role="group" aria-label="Filter by roaster" hidden></div>
         <form id="bean-form" class="card stack" hidden novalidate>
           <h2 id="bean-form-title">New coffee</h2>
           <label for="b-name">Name<input id="b-name" type="text" placeholder="e.g. Brazil Santos"></label>
@@ -359,6 +362,12 @@ details.method form{padding:0 16px 16px}
           <p class="small muted" style="margin:0">Tap a method to change its target yield, target time and grinder.</p>
           <div id="method-list" class="stack"></div>
         </div>
+        <form id="sugg-form" class="card stack" novalidate>
+          <h2>Grind suggestions</h2>
+          <p class="small muted" style="margin:0">Used where a coffee has no grind yet for a method, based on its espresso double. Once your coffees have both values, the app uses your own gaps instead.</p>
+          <div class="grid2" id="sugg-fields"></div>
+          <button type="button" class="link" id="sugg-reset" style="align-self:flex-start">Reset to default</button>
+        </form>
         <div class="card stack" id="share-card">
           <h2>Share coffees</h2>
           <p class="small muted" style="margin:0">Send coffees with roaster, process, flavour notes and grind settings to another phone. Brews and cups stay here.</p>
@@ -533,11 +542,34 @@ function nextGrind(beanId,methodId,type){
   if(last)return analyse(last,prevOf(last)).next;
   const bean=db.beans.find(b=>b.id===beanId),own=type?bean?.starts?.[`${methodId}:${type}`]:null;
   if(own!=null&&own!=='')return +own;
+  const st=startOf(bean,methodId,type);if(st!=null)return st;
+  const sg=suggestFor(bean,methodId,type);if(sg)return sg.v;
   const lm=brewsOf(beanId,methodId);if(lm.length)return lm[lm.length-1].grind;
-  return startOf(bean,methodId,type);
+  return null;
 }
 /* Starting grind; methods with single/double keep one per shot type ("espresso:single") */
 function startOf(bean,methodId,type){if(!bean)return null;if(type){const t=bean.starts?.[`${methodId}:${type}`];if(t!=null&&t!=='')return +t;if(type==='single')return null}const v=bean.starts?.[methodId];if(v!=null&&v!=='')return +v;return methodId==='espresso'&&bean.start!=null&&bean.start!==''?+bean.start:null}
+/* ---------- Suggested grind where nothing is entered yet ----------
+   1) learned from his other coffees: average gap between two methods on coffees that have both
+   2) otherwise rough rules of thumb relative to espresso double (single a step finer, moka/AeroPress/V60 coarser) */
+const optKey=(mid,t)=>mid+(t?':'+t:'');
+function knownOf(bean){const out={},mks=markers(bean.id);db.methods.forEach(m=>(m.hasTypes?['single','double']:[null]).forEach(t=>{const mk=mks.find(x=>x.m===m.id&&(x.t||null)===t);const v=mk?mk.value:startOf(bean,m.id,t);if(v!=null&&!isNaN(v))out[optKey(m.id,t)]=+v}));return out}
+const SUGG_DEF={single:2,moka:1.6,aeropress:2,v60:2.6};
+const suggRules=()=>({...SUGG_DEF,...(db.suggest||{})});
+function suggestFor(bean,mid,t){
+  const m=methodOf(mid);if(!m||!bean)return null;const key=optKey(mid,t),known=knownOf(bean);if(known[key]!=null)return null;
+  const anchors=Object.keys(known);if(!anchors.length)return null;
+  const others=db.beans.filter(b=>b.id!==bean.id).map(knownOf);
+  let best=null;anchors.forEach(a=>{const d=others.filter(k=>k[a]!=null&&k[key]!=null).map(k=>k[key]-k[a]);if(d.length&&(!best||d.length>best.n))best={a,n:d.length,diff:d.reduce((x,y)=>x+y,0)/d.length}});
+  if(best)return {v:snap(known[best.a]+best.diff,m.step),from:best.a,how:'learned',n:best.n};
+  if(m.dir!=='coarse')return null;
+  const S=suggRules(),F=k=>k==='espresso:double'?1:+S[k]>0?+S[k]:null;
+  const toE=(k,v)=>k==='espresso:single'?v+(+S.single||0):F(k)?v/F(k):null,fromE=(k,e)=>k==='espresso:single'?e-(+S.single||0):F(k)?e*F(k):null;
+  const a=['espresso:double','espresso:single',...anchors].find(k=>known[k]!=null&&toE(k,known[k])!=null&&methodOf(k.split(':')[0])?.dir==='coarse');if(!a)return null;
+  const v=fromE(key,toE(a,known[a]));return v==null||v<=0?null:{v:snap(v,m.step),from:a,how:'rule'};
+}
+const optLabel=k=>{const[mid,t]=k.split(':');const m=methodOf(mid);return (m?m.name:mid)+(t?' '+t:'')};
+const suggText=sg=>sg.how==='learned'?`Suggestion from your ${optLabel(sg.from)} and ${sg.n} other ${sg.n===1?'coffee':'coffees'}. Not saved yet.`:`Rough suggestion from your ${optLabel(sg.from)}. Not saved yet.`;
 /* Alle Zubereitungen einer Sorte mit ihrem aktuellen Mahlgrad */
 function methodValues(bean){const mks=markers(bean.id);return db.methods.map(m=>{const mk=mks.find(x=>x.m===m.id);
   const t=mk?mk.t:m.hasTypes?(startOf(bean,m.id,'double')!=null||startOf(bean,m.id,'single')==null?'double':'single'):null;
@@ -657,7 +689,7 @@ const methodColor=id=>METHOD_TAG[id]?`var(--m-${id})`:'var(--m-other)';
 function dialMeta(m,t){if(!m)return null;const tag=METHOD_TAG[m.id]||(m.name.length>10?m.name.slice(0,9)+'…':m.name).toUpperCase();
   const sub=m.hasTypes?typeLabel(t||'double').toUpperCase():(METHOD_SUB[m.id]||(METHOD_TAG[m.id]?'':'GRIND'));
   return {tag,sub,col:methodColor(m.id),label:`${m.name}${m.hasTypes?' '+typeLabel(t||'double'):''}`}}
-function dial(value,settled,big,meta){
+function dial(value,settled,big,meta,sugg){
   const [lo,hi]=grindRange(),cx=60,cy=60,r=46,A0=135,SW=270;
   const pos=v=>{const t=Math.min(Math.max((v-lo)/(hi-lo||1),0),1);const a=(A0+t*SW)*Math.PI/180;return [cx+r*Math.cos(a),cy+r*Math.sin(a),a]};
   let ticks='';const span=hi-lo;const every=span>30?5:span>14?2:1;
@@ -666,15 +698,15 @@ function dial(value,settled,big,meta){
   const has=value!=null&&value!==''&&!isNaN(value);
   const [mx,my]=has?pos(+value):[0,0];
   const [sx,sy]=pos(lo),[ex,ey]=pos(hi);
-  const col=settled?'var(--teal)':'var(--fast)';
+  const col=sugg?'var(--sugg)':settled?'var(--teal)':'var(--fast)';
   return `<svg class="dial${big?' big':''}" viewBox="-6 -6 132 132" role="img" aria-label="${meta?esc(meta.label)+': ':''}grind ${has?fmt(value):'not set yet'}">
-    <circle cx="60" cy="60" r="${r-4}" fill="var(--accent-soft)"/>
+    <circle cx="60" cy="60" r="${r-4}" fill="${sugg?'var(--sugg-soft)':'var(--accent-soft)'}"/>
     ${meta?`<circle cx="60" cy="60" r="${r-8}" fill="none" stroke="${meta.col}" stroke-width="1.6" opacity=".55"/>`:''}
     <path d="M${sx.toFixed(1)} ${sy.toFixed(1)}A${r} ${r} 0 1 1 ${ex.toFixed(1)} ${ey.toFixed(1)}" fill="none" stroke="var(--line)" stroke-width="5" stroke-linecap="round"/>
     ${ticks}
-    ${has?`<path d="M${sx.toFixed(1)} ${sy.toFixed(1)}A${r} ${r} 0 ${((+value-lo)/(hi-lo||1))*SW>180?1:0} 1 ${mx.toFixed(1)} ${my.toFixed(1)}" fill="none" stroke="${col}" stroke-width="5" stroke-linecap="round"/><circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="7" fill="var(--surface)" stroke="${col}" stroke-width="3.5"/>`:''}
+    ${has?`<path d="M${sx.toFixed(1)} ${sy.toFixed(1)}A${r} ${r} 0 ${((+value-lo)/(hi-lo||1))*SW>180?1:0} 1 ${mx.toFixed(1)} ${my.toFixed(1)}" fill="none" stroke="${col}" stroke-width="5" stroke-linecap="round"${sugg?' stroke-dasharray="2 7"':''}/><circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="7" fill="var(--surface)" stroke="${col}" stroke-width="3.5"/>`:''}
     ${meta?`<text x="60" y="45" text-anchor="middle" style="font-family:var(--font-body);font-size:9.5px;font-weight:800;letter-spacing:.04em;fill:${meta.col}">${esc(meta.tag)}</text>`:''}
-    <text x="60" y="${has?(meta?71:66):(meta?69:64)}" text-anchor="middle" style="font-size:${has?(String(fmt(value)).length>3?24:30):16}px;font-weight:700;fill:var(--accent)">${has?fmt(value):'–'}</text>
+    <text x="60" y="${has?(meta?71:66):(meta?69:64)}" text-anchor="middle" style="font-size:${has?(String(fmt(value)).length>3?24:30):16}px;font-weight:700;fill:${sugg?'var(--sugg)':'var(--accent)'}">${has?(sugg?'≈':'')+fmt(value):'–'}</text>
     <text x="60" y="${meta?87:84}" text-anchor="middle" style="${meta?'font-family:var(--font-body);font-size:8.5px;font-weight:700;letter-spacing:.04em;fill:'+meta.col:'font-size:8.5px;letter-spacing:.08em;fill:var(--muted)'}">${meta?esc(meta.sub):'GRIND'}</text>
   </svg>`;
 }
@@ -923,9 +955,12 @@ function prefill(){
   const m=methodOf(form.method),type=m.hasTypes?form.type:null;
   const g=nextGrind($('#f-bean').value,m.id,type);
   $('#f-grind').value=inVal(g);$('#f-yield').placeholder=fmt(targetOf(m,type));
+  const bean=db.beans.find(b=>b.id===$('#f-bean').value),sg=bean&&!brewsOf(bean.id,m.id,type??undefined).length&&startOf(bean,m.id,type)==null?suggestFor(bean,m.id,type):null;
+  $('#f-grind').style.color=sg?'var(--sugg)':'';$('#f-grind-hint').textContent=sg?'≈':'';
 }
 function timeHint(){const v=numIn($('#f-time').value);$('#f-time-hint').textContent=v>=60?'= '+fmtT(v):''}
 $('#f-time').addEventListener('input',timeHint);
+$('#f-grind').addEventListener('input',()=>{$('#f-grind').style.color='';$('#f-grind-hint').textContent=''});
 $('#f-bean').addEventListener('change',prefill);
 $('#f-method').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;form.method=b.dataset.v;methodChanged()});
 $('#f-type').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;form.type=b.dataset.v;setSeg($('#f-type'),form.type);prefill()});
@@ -951,7 +986,7 @@ $('#shot-form').addEventListener('submit',e=>{
   db.brews.push(b);db.last={bean:beanId,method:m.id,type:type||form.type};save();
   const a=analyse(b,prev);showResult(b,a);
   $('#f-time').value='';$('#f-yield').value='';$('#f-note').value='';form.taste='';setSeg($('#f-taste'),'');form.rating=0;renderRate();timeHint();
-  $('#f-grind').value=inVal(a.next);
+  $('#f-grind').value=inVal(a.next);$('#f-grind').style.color='';$('#f-grind-hint').textContent='';
   toast('Brew saved',()=>{db.brews=db.brews.filter(x=>x.id!==b.id);save();$('#result').innerHTML='';prefill()});
 });
 function showResult(b,a){
@@ -968,27 +1003,36 @@ function showResult(b,a){
 const verdict=mk=>mk.settled?'<span class="verdict ok">✓ Dialled in. Keep it.</span>':`<span class="verdict try">Next try, last was ${fmt(mk.last.grind)}</span>`;
 /* Every method (and shot type) a coffee can be brewed with; tapping the dial on the card steps through them */
 function beanOptions(bean){const mks=markers(bean.id);return db.methods.flatMap(m=>(m.hasTypes?['single','double']:[null]).map(t=>{
-  const mk=mks.find(x=>x.m===m.id&&(x.t||null)===t)||null;const v=mk?mk.value:startOf(bean,m.id,t);return {m,t,mk,v,count:mk?mk.count:0}}))}
+  const mk=mks.find(x=>x.m===m.id&&(x.t||null)===t)||null;const v=mk?mk.value:startOf(bean,m.id,t);return {m,t,mk,v,count:mk?mk.count:0,sg:v==null?suggestFor(bean,m.id,t):null}}))}
 function defaultOption(opts){let best=0;opts.forEach((o,i)=>{if(o.count>opts[best].count)best=i});if(opts[best]?.count)return best;const i=opts.findIndex(o=>o.v!=null);return i<0?0:i}
 const cardSel={};
 function cardOption(bean){const opts=beanOptions(bean);let i=cardSel[bean.id];if(i==null||i>=opts.length)i=defaultOption(opts);return {opts,i,o:opts[i]}}
 function beanCard(b){
   const {opts,i,o}=cardOption(b),mk=o?.mk||null,label=o?`${o.m.name}${o.t?' '+typeLabel(o.t).toLowerCase():''}`:'';
   return `<div class="card bean" data-bean="${b.id}" role="button" tabindex="0" aria-label="Open ${esc(b.name)}">
-    ${o?`<button type="button" class="dialbtn" data-cycle="${b.id}" aria-label="${esc(label)}, ${o.v!=null?'grind '+fmt(o.v):'no grind yet'}. Tap to show the next brew method (${i+1} of ${opts.length})">${dial(o.v,mk?mk.settled:false,false,dialMeta(o.m,o.t))}</button>`:dial(null,false)}
+    ${o?`<button type="button" class="dialbtn" data-cycle="${b.id}" aria-label="${esc(label)}, ${o.v!=null?'grind '+fmt(o.v):o.sg?'suggested grind about '+fmt(o.sg.v):'no grind yet'}. Tap to show the next brew method (${i+1} of ${opts.length})">${o.v!=null?dial(o.v,mk?mk.settled:false,false,dialMeta(o.m,o.t)):dial(o.sg?.v??null,false,false,dialMeta(o.m,o.t),!!o.sg)}</button>`:dial(null,false)}
     <div style="min-width:0"><h3>${esc(b.name)}</h3><div class="small muted">${esc(label)}${b.roaster?' · '+esc(b.roaster):''}${b.process?' · '+esc(b.process):''}</div></div>
-    <div class="stack" style="gap:8px;min-width:0">${mk?verdict(mk):o?.v!=null?'<span class="small muted">Starting grind</span>':'<span class="small muted">No grind yet</span>'}
+    <div class="stack" style="gap:8px;min-width:0">${mk?verdict(mk):o?.v!=null?'<span class="small muted">Starting grind</span>':o?.sg?'':'<span class="small muted">No grind yet</span>'}
       ${b.notes?.length?`<div class="notes">${b.notes.map(n=>`<span class="note">${esc(n)}</span>`).join('')}</div>`:''}</div>
   </div>`;
 }
+let roasterFilter='';const NO_R='__none__';
 function renderBeans(){
   const list=$('#bean-list');
-  if(!db.beans.length){list.innerHTML='<div class="card muted">No coffees yet. Tap "+ Coffee" to add the first one.</div>';return}
+  if(!db.beans.length){$('#roaster-filter').hidden=true;list.innerHTML='<div class="card muted">No coffees yet. Tap "+ Coffee" to add the first one.</div>';return}
   const last=b=>{const l=brewsOf(b.id);return l.length?l[l.length-1].ts:0};
-  const sorted=[...db.beans].sort((a,b)=>last(b)-last(a));
+  const roasters=roasterList(),noR=db.beans.some(b=>!(b.roaster||'').trim());
+  if(roasterFilter&&roasterFilter!==NO_R&&!roasters.includes(roasterFilter))roasterFilter='';
+  const chip=(v,l)=>`<button type="button" data-rf="${esc(v)}" aria-pressed="${roasterFilter===v}">${esc(l)}</button>`;
+  $('#roaster-filter').innerHTML=chip('','All')+roasters.map(r=>chip(r,r)).join('')+(noR&&roasters.length?chip(NO_R,'No roaster'):'');
+  $('#roaster-filter').hidden=!roasters.length;
+  const keep=b=>!roasterFilter||(roasterFilter===NO_R?!(b.roaster||'').trim():(b.roaster||'').trim()===roasterFilter);
+  const sorted=[...db.beans].filter(keep).sort((a,b)=>last(b)-last(a));
   const act=sorted.filter(b=>b.active),old=sorted.filter(b=>!b.active);
+  if(!sorted.length){list.innerHTML='<div class="card muted">No coffees from this roaster.</div>';return}
   list.innerHTML=(act.length?`<div class="eyebrow">At home (${act.length})</div>${act.map(beanCard).join('')}`:'')+(old.length?`<div class="eyebrow" style="margin-top:8px">Finished (${old.length})</div>${old.map(beanCard).join('')}`:'');
 }
+$('#roaster-filter').addEventListener('click',e=>{const b=e.target.closest('[data-rf]');if(!b)return;roasterFilter=b.dataset.rf;renderBeans()});
 $('#bean-list').addEventListener('click',e=>{
   const c=e.target.closest('[data-cycle]');
   if(c){const id=c.dataset.cycle,bean=db.beans.find(x=>x.id===id),{opts,i}=cardOption(bean);cardSel[id]=(i+1)%opts.length;
@@ -1046,7 +1090,8 @@ function renderBean(){
   const M=methodOf(dMethod);if(M.hasTypes){if(!dType){const lt=brewsOf(b.id,M.id);dType=lt.length?lt[lt.length-1].type||'double':'double'}}else dType=null;
   const all=brewsOf(b.id),l=brewsOf(b.id,M.id),rev=[...l].reverse(),mks=markers(b.id).filter(x=>x.m===M.id);
   const mk=mks.find(x=>x.t===dType)||null;
-  const val=mk?mk.value:(()=>{const g=nextGrind(b.id,M.id,dType);return g})();
+  const own=mk?mk.value:brewsOf(b.id,M.id,dType||undefined).length?nextGrind(b.id,M.id,dType):startOf(b,M.id,dType);
+  const sg=own==null?suggestFor(b,M.id,dType):null,val=own??sg?.v??null;
   const used=new Set(all.map(x=>x.methodId));
   const age=b.roastDate?Math.floor((startOfDay(Date.now())-new Date(b.roastDate).setHours(0,0,0,0))/DAY):null;
   $('#v-bean').innerHTML=`
@@ -1057,8 +1102,8 @@ function renderBean(){
      ${b.process||b.notes?.length?`<div class="notes" style="justify-content:center">${b.process?`<span class="pill type">${esc(b.process)}</span>`:''}${(b.notes||[]).map(n=>`<span class="note">${esc(n)}</span>`).join('')}</div>`:''}
      <div class="chips" style="max-width:100%;justify-content:flex-start" data-dm>${db.methods.map(m=>`<button type="button" data-dm="${m.id}" aria-pressed="${m.id===M.id}">${esc(m.name)}${used.has(m.id)?' ●':''}</button>`).join('')}</div>
      ${M.hasTypes?`<div class="seg" style="width:100%;max-width:300px" data-dt><button type="button" data-dt="single" aria-pressed="${dType==='single'}">Single</button><button type="button" data-dt="double" aria-pressed="${dType==='double'}">Double</button></div>`:''}
-     ${dial(val,mk?mk.settled:false,true,dialMeta(M,dType))}
-     <div>${mk?`<div class="small muted">Your grind for ${esc(M.name)}${dType?' '+typeLabel(dType):''}</div>${verdict(mk)}`:val!=null?`<span class="small muted">Starting grind for ${esc(M.name)}. No brew with it yet.</span>`:`<span class="small muted">No grind for ${esc(M.name)} yet. Add a starting grind under "Edit" or log the first brew.</span>`}</div>
+     ${dial(val,mk?mk.settled:false,true,dialMeta(M,dType),!!sg)}
+     <div>${mk?`<div class="small muted">Your grind for ${esc(M.name)}${dType?' '+typeLabel(dType):''}</div>${verdict(mk)}`:sg?'':val!=null?`<span class="small muted">Starting grind for ${esc(M.name)}. No brew with it yet.</span>`:`<span class="small muted">No grind for ${esc(M.name)} yet. Add a starting grind under "Edit" or log the first brew.</span>`}</div>
      ${(()=>{const sc=beanScore(b.id);if(!sc)return '<span class="small muted">Not rated yet</span>';const pos=ranking().findIndex(x=>x.b.id===b.id)+1;return `<div><span class="score" style="font-size:1.6rem">${fmt(sc.avg)}</span><span class="small muted"> / 10 · no. ${pos} in the ranking</span></div>`})()}
      <label class="check" for="d-active"><input id="d-active" type="checkbox" ${b.active?'checked':''}>At home right now</label>
      <button class="primary" data-act="brew" style="align-self:stretch">Log ${esc(M.name)} with this coffee</button>
@@ -1089,8 +1134,14 @@ $('#v-bean').addEventListener('click',e=>{
 /* ---------- Einstellungen ---------- */
 let openMethod=null,delMethod=null;
 const field=(id,label,val,hint)=>`<label for="${id}">${label}<input id="${id}" type="text" inputmode="decimal" autocomplete="off" value="${inVal(val)}">${hint?`<span class="hint">${hint}</span>`:''}</label>`;
+function renderSugg(){const S=suggRules();
+  $('#sugg-fields').innerHTML=`<label for="sg-single">Single finer than double by<input id="sg-single" data-k="single" type="text" inputmode="decimal" autocomplete="off" value="${inVal(S.single)}"><span class="hint">grind steps, e.g. 2 or 2,5</span></label>`+
+    db.methods.filter(m=>!m.hasTypes).map(m=>`<label for="sg-${m.id}">${esc(m.name)} = espresso double ×<input id="sg-${m.id}" data-k="${m.id}" type="text" inputmode="decimal" autocomplete="off" placeholder="no rule" value="${inVal(S[m.id])}"></label>`).join('')}
+$('#sugg-form').addEventListener('input',e=>{const k=e.target.dataset.k;if(!k)return;const v=numIn(e.target.value);db.suggest={...(db.suggest||{}),[k]:isNaN(v)?null:v};save()});
+$('#sugg-form').addEventListener('submit',e=>e.preventDefault());
+$('#sugg-reset').addEventListener('click',()=>{db.suggest={};save();renderSugg();toast('Suggestion rules reset')});
 function renderSettings(){
-  $('#o-name').value=db.owner||'';$('#o-partner').value=db.partner||'';
+  $('#o-name').value=db.owner||'';$('#o-partner').value=db.partner||'';renderSugg();
   $('#method-list').innerHTML=db.methods.map(m=>`<details class="method" data-m="${m.id}" ${openMethod===m.id?'open':''}>
     <summary><div><h3>${esc(m.name)}</h3><div class="small muted">${m.hasTypes?`${fmt(m.single)} / ${fmt(m.double)} g`:`${fmt(m.yield)} g`} · ${fmtT(m.min)} to ${fmtT(m.max)} · ${m.mode==='time'?'suggestion by time':'suggestion by taste'}</div></div></summary>
     <form class="stack" data-m="${m.id}" novalidate>
